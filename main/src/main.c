@@ -7,20 +7,27 @@
 #include "display.h"
 
 /* ------------------------- 全局实例定义 ------------------------ */
-XGpioPs GpioInstance;   /* GPIO 实例 */
+XGpioPs GpioInstance;
 
 /* 任务句柄定义 */
-static TaskHandle_t xStartingTaskHndl;
+static TaskHandle_t xDisplayTaskHandle = NULL;
+static TaskHandle_t xStartingTaskHndl = NULL;
 
 /* 任务函数声明 */
+static void vDisplayTask( void *pvParameters );
 static void vStartingTask( void *pvParameters );
 
 int main( void )
 {
-    /* 注意：硬件基础初始化也可以放在这里，或者放在第一个启动任务中 */
-    xil_printf( "--- FreeRTOS 系统启动中 ---\r\n" );
+    xTaskCreate(
+		vDisplayTask,
+		"DisplayTask",
+		2048,
+		NULL,
+		tskIDLE_PRIORITY + 1,
+		&xDisplayTaskHandle
+	);
 
-    /* 创建心跳任务 */
     xTaskCreate(
         vStartingTask,
         "Start",
@@ -30,10 +37,31 @@ int main( void )
         &xStartingTaskHndl
     );
 
-    /* 启动调度器 */
     vTaskStartScheduler();
 
     for( ;; );
+}
+
+static void vDisplayTask(void *pvParameters) {
+    Display_Init();
+
+    xil_printf("Display Initialized...\r\n");
+
+    while(1) {
+        // --- 绘图流程 ---
+        u8g2_ClearBuffer(&u8g2);
+
+        u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
+        u8g2_DrawStr(&u8g2, 0, 20, "Zynq-7020");
+
+        u8g2_SetFont(&u8g2, u8g2_font_wqy12_t_chinese1);
+        u8g2_DrawUTF8(&u8g2, 0, 45, "系统运行正常");
+
+        u8g2_DrawFrame(&u8g2, 0, 50, 128, 10);     // 画一个进度条外框
+        u8g2_SendBuffer(&u8g2);                    // 推送到 SSD1315 显示
+
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
 }
 
 static void vStartingTask( void *pvParameters )

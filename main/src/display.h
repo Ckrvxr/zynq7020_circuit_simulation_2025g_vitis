@@ -6,6 +6,3 @@
 extern u8g2_t u8g2;
 
 void Display_Init(void);
-
-void Display_TestPage(void);
-
