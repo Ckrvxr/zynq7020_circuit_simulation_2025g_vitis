@@ -2,75 +2,38 @@
 #include "task.h"
 #include "xil_printf.h"
 #include "xparameters.h"
-#include "xgpiops.h"
-
 #include "display.h"
+#include <stdio.h>
 
-/* ------------------------- 全局实例定义 ------------------------ */
-XGpioPs GpioInstance;
-
-/* 任务句柄定义 */
-static TaskHandle_t xDisplayTaskHandle = NULL;
-static TaskHandle_t xStartingTaskHndl = NULL;
-
-/* 任务函数声明 */
-static void vDisplayTask( void *pvParameters );
-static void vStartingTask( void *pvParameters );
-
-int main( void )
-{
-    xTaskCreate(
-		vDisplayTask,
-		"DisplayTask",
-		2048,
-		NULL,
-		tskIDLE_PRIORITY + 1,
-		&xDisplayTaskHandle
-	);
-
-    xTaskCreate(
-        vStartingTask,
-        "Start",
-        configMINIMAL_STACK_SIZE,
-        NULL,
-        tskIDLE_PRIORITY + 1,
-        &xStartingTaskHndl
-    );
-
-    vTaskStartScheduler();
-
-    for( ;; );
-}
+TaskHandle_t xDisplayTaskHandle;
 
 static void vDisplayTask(void *pvParameters) {
     Display_Init();
 
-    xil_printf("Display Initialized...\r\n");
+    int count = 0;
+    char buf[32];
 
-    while(1) {
-        // --- 绘图流程 ---
+    for( ;; ) {
         u8g2_ClearBuffer(&u8g2);
+        u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+        u8g2_DrawStr(&u8g2, 0, 15, "u8g2 on Zynq!");
+        
+        snprintf(buf, sizeof(buf), "Count: %d", count++);
+        u8g2_DrawStr(&u8g2, 0, 35, buf);
+        
+        u8g2_SendBuffer(&u8g2);
 
-        u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
-        u8g2_DrawStr(&u8g2, 0, 20, "Zynq-7020");
-
-        u8g2_SetFont(&u8g2, u8g2_font_wqy12_t_chinese1);
-        u8g2_DrawUTF8(&u8g2, 0, 45, "系统运行正常");
-
-        u8g2_DrawFrame(&u8g2, 0, 50, 128, 10);     // 画一个进度条外框
-        u8g2_SendBuffer(&u8g2);                    // 推送到 SSD1315 显示
-
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
-static void vStartingTask( void *pvParameters )
+int main( void )
 {
-    const TickType_t xDelayTime = pdMS_TO_TICKS( 1000UL );
+    xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
 
-    for( ;; )
-    {
-        xil_printf( "系统运行状态：正常\r\n" );
-        vTaskDelay( xDelayTime );
-    }
+    xil_printf("System Starting...\r\n");
+    
+    vTaskStartScheduler();
+
+    for( ;; );
 }
