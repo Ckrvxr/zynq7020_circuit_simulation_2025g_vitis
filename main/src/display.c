@@ -65,7 +65,9 @@ void Display_Init(void) {
 }
 
 /* -------------------------------------------------------- Scene -------------------------------------------------------- */
-static DisplayState_t currentState = STATE_MAIN_MENU;
+static uint32_t ticks = 0;
+static DisplayState_t currentState = STATE_FIR_MODE_MENU;
+static uint8_t menu_index = 1;
 
 void Display_Refresh(void) {
     // Test Display
@@ -77,10 +79,88 @@ void Display_Refresh(void) {
     // snprintf(buf, sizeof(buf), "Count: ", count++);
     // u8g2_DrawStr(&u8g2, 0, 35, buf);
     // u8g2_SendBuffer(&u8g2);
-    
+
+    u8g2_ClearBuffer(&u8g2);
+    switch (currentState) {
+        case STATE_MAIN_MENU:
+            Display_Draw_MainMenu();
+            break;
+        case STATE_DDS_MODE_MENU:
+            Display_Draw_DDSMode();
+            break;
+        case STATE_FIR_MODE_MENU:
+            Display_Draw_FIRMode();
+            break;
+        case STATE_FIR_MODE_LEARNING:
+            Display_Draw_FIRModeLearningProgress();
+            break;
+        case STATE_FIR_MODE_LEARN_COMPLETE:
+            Display_Draw_FIRModeLearnComplete();
+            break;
+    }
+    u8g2_SendBuffer(&u8g2);
+
     vTaskDelay(pdMS_TO_TICKS(100));
 }
 
-void Display_Scene1(void) {
+void Display_Draw_MainMenu(void) {
+    char buf[32];
+
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    snprintf(buf, sizeof(buf), "[Main Menu] T: %lu", ticks++); 
+    u8g2_DrawStr(&u8g2, 0, 10, buf);
+    u8g2_DrawHLine(&u8g2, 0, 12, 128);
+
+    // 简单的选中逻辑：在选中的行前面画个 ">"
+    if (menu_index == 1) u8g2_DrawStr(&u8g2, 5, 30, ">");
+    u8g2_DrawStr(&u8g2, 15, 30, "DDS Mode");
+    if (menu_index == 2) u8g2_DrawStr(&u8g2, 5, 45, ">");
+    u8g2_DrawStr(&u8g2, 15, 45, "FIR Mode");
+}
+void Display_Draw_DDSMode(void) {
+    // 假设这些变量在其他地方定义，反映当前的信号参数
+    static float vpp = 3.3f;
+    static uint32_t freq = 10; // kHz
+    static const char* wave_type = "Sine";
+
+    char buf[32];
+
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    snprintf(buf, sizeof(buf), "[DDS Mode] T:%lu", ticks++);
+    u8g2_DrawStr(&u8g2, 0, 10, buf);
+    u8g2_DrawHLine(&u8g2, 0, 12, 128);
+
+    u8g2_DrawStr(&u8g2, 5, 28, "Wave:");
+    u8g2_DrawStr(&u8g2, 60, 28, wave_type);
+
+    u8g2_DrawStr(&u8g2, 5, 43, "Vpp:");
+    // 格式化浮点数，Zynq 的标准库通常支持 %f
+    // 如果不支持，可以转成整数部分和小数部分显示
+    snprintf(buf, sizeof(buf), "%.1f V", vpp);
+    u8g2_DrawStr(&u8g2, 60, 43, buf);
+
+    u8g2_DrawStr(&u8g2, 5, 58, "Freq:");
+    snprintf(buf, sizeof(buf), "%lu kHz", freq);
+    u8g2_DrawStr(&u8g2, 60, 58, buf);
+}
+void Display_Draw_FIRMode(void) {
+    // 模拟当前选择的参数索引和状态
+    static const char* filter_type = "Band-Stop";
+
+    char buf[32];
+
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    snprintf(buf, sizeof(buf), "[FIR Mode] T:%lu", ticks++);
+    u8g2_DrawStr(&u8g2, 0, 10, buf);
+
+    u8g2_DrawStr(&u8g2, 5, 32, "Active:");
+    u8g2_DrawStr(&u8g2, 50, 32, filter_type);
+
+    u8g2_DrawStr(&u8g2, 5, 56, "> Start Learning");
+}
+void Display_Draw_FIRModeLearningProgress(void) {
+
+}
+void Display_Draw_FIRModeLearnComplete(void) {
 
 }
