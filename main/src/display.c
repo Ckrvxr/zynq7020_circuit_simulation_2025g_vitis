@@ -3,7 +3,8 @@
 #include "xiicps.h"
 #include "display.h"
 #include "u8g2.h"
-
+#include <stdio.h>
+/* -------------------------------------------------------- Driver -------------------------------------------------------- */
 XIicPs IicInstance;
 u8g2_t u8g2;
 
@@ -31,7 +32,6 @@ uint8_t u8x8_byte_zynq_hw_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *
         case U8X8_MSG_BYTE_END_TRANSFER:
             // u8g2 默认传进来的地址是 8-bit (例如 0x78)，而 Zynq XIicPs 默认使用 7-bit 地址，所以要右移 1 位 (变成 0x3C)
             XIicPs_MasterSendPolled(&IicInstance, i2c_buffer, i2c_buf_idx, u8x8_GetI2CAddress(u8x8) >> 1);
-//            XIicPs_MasterSendPolled(&IicInstance, i2c_buffer, i2c_buf_idx, 0x7A >> 1);
             while (XIicPs_BusIsBusy(&IicInstance));
             break;
         default:
@@ -45,7 +45,6 @@ uint8_t u8x8_gpio_and_delay_zynq(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, voi
     switch(msg) {
         case U8X8_MSG_DELAY_MILLI:
             vTaskDelay(pdMS_TO_TICKS(arg_int)); // 使用 FreeRTOS 延时替代死等
-//            vTaskDelay(pdMS_TO_TICKS(1000)); // 使用 FreeRTOS 延时替代死等
             break;
         default:
             return 0;
@@ -58,9 +57,30 @@ void Display_Init(void) {
     XIicPs_Config *Config = XIicPs_LookupConfig(XPAR_PS7_I2C_0_DEVICE_ID);
     XIicPs_CfgInitialize(&IicInstance, Config, Config->BaseAddress);
     XIicPs_SetSClk(&IicInstance, 400000);
-
+    vTaskDelay(pdMS_TO_TICKS(1000));
     // 2. 初始化 u8g2，如果是 SSD1306 屏幕可以直接把 ssd1315 换成 ssd1306
     u8g2_Setup_ssd1315_i2c_128x64_noname_f(&u8g2, U8G2_R0, u8x8_byte_zynq_hw_i2c, u8x8_gpio_and_delay_zynq);
     u8g2_InitDisplay(&u8g2);
     u8g2_SetPowerSave(&u8g2, 0); // 唤醒屏幕
+}
+
+/* -------------------------------------------------------- Scene -------------------------------------------------------- */
+static DisplayState_t currentState = STATE_MAIN_MENU;
+
+void Display_Refresh(void) {
+    // Test Display
+    // static uint32_t count = 0;
+    // static char buf[32];
+    // u8g2_ClearBuffer(&u8g2);
+    // u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    // u8g2_DrawStr(&u8g2, 0, 15, "u8g2 on Zynq!");
+    // snprintf(buf, sizeof(buf), "Count: ", count++);
+    // u8g2_DrawStr(&u8g2, 0, 35, buf);
+    // u8g2_SendBuffer(&u8g2);
+    
+    vTaskDelay(pdMS_TO_TICKS(100));
+}
+
+void Display_Scene1(void) {
+
 }
