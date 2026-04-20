@@ -61,17 +61,26 @@ void Display_Init(void) {
 }
 
 /* -------------------------------------------------------- Scene -------------------------------------------------------- */
-static uint32_t ticks = 0;
 volatile DisplayState_t currentState = STATE_MAIN_MENU;
 volatile uint8_t menu_index = 1;
 
+static void Display_Draw_LiveAnimation(int x, int y) {
+    static uint8_t frame_idx = 0;
+    u8g2_SetDrawColor(&u8g2, 1);
+    switch ( frame_idx % 4 ) {
+        case 0: u8g2_DrawLine(&u8g2, x-3, y, x+3, y);     break;
+        case 1: u8g2_DrawLine(&u8g2, x-2, y-2, x+2, y+2); break;
+        case 2: u8g2_DrawLine(&u8g2, x, y-3, x, y+3);     break;
+        case 3: u8g2_DrawLine(&u8g2, x+2, y-2, x-2, y+2); break;
+    }
+    frame_idx++;
+}
 static void Display_Draw_MainMenu(void) {
-    char buf[32];
-
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    snprintf(buf, sizeof(buf), "[Main Menu] T: %lu", ticks++); 
-    u8g2_DrawStr(&u8g2, 0, 10, buf);
-    u8g2_DrawHLine(&u8g2, 0, 12, 128);
+
+    u8g2_DrawStr(&u8g2, 0, 10, "[Main Menu]");
+    Display_Draw_LiveAnimation(120, 5);
+    u8g2_DrawHLine(&u8g2, 0, 14, 128);
 
     // 简单的选中逻辑：在选中的行前面画个 ">"
     if (menu_index == 1) u8g2_DrawStr(&u8g2, 5, 30, ">");
@@ -88,9 +97,10 @@ static void Display_Draw_DDSMode(void) {
     char buf[32];
 
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    snprintf(buf, sizeof(buf), "[DDS Mode] T:%lu", ticks++);
-    u8g2_DrawStr(&u8g2, 0, 10, buf);
-    u8g2_DrawHLine(&u8g2, 0, 12, 128);
+
+    u8g2_DrawStr(&u8g2, 0, 10, "[DDS Mode]");
+    Display_Draw_LiveAnimation(120, 5);
+    u8g2_DrawHLine(&u8g2, 0, 14, 128);
 
     u8g2_DrawStr(&u8g2, 5, 28, "Wave:");
     u8g2_DrawStr(&u8g2, 60, 28, wave_type);
@@ -109,11 +119,12 @@ static void Display_Draw_FIRMode(void) {
     // 模拟当前选择的参数索引和状态
     static const char* filter_type = "Band-Stop";
 
-    char buf[32];
-
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    snprintf(buf, sizeof(buf), "[FIR Mode] T:%lu", ticks++);
-    u8g2_DrawStr(&u8g2, 0, 10, buf);
+
+    u8g2_DrawStr(&u8g2, 0, 10, "[FIR Mode]");
+    Display_Draw_LiveAnimation(120, 5);
+    u8g2_DrawHLine(&u8g2, 0, 14, 128);
+
 
     u8g2_DrawStr(&u8g2, 5, 32, "Active:");
     u8g2_DrawStr(&u8g2, 50, 32, filter_type);

@@ -52,22 +52,32 @@ uint8_t Key_Read_Callback(uint8_t button_id) {
 
 void Key_Event_Up_SingleClcick_Handler(Button* btn, void* user_data) {
     if(currentState == STATE_MAIN_MENU) {
-        if(menu_index == 1) {}
-        if(menu_index == 2) { menu_index = 1; }
+        if     (menu_index == 1) { return; }
+        else if(menu_index == 2) { menu_index = 1; }
     }
 }
 
 void Key_Event_Down_SingleClcick_Handler(Button* btn, void* user_data) {
     if(currentState == STATE_MAIN_MENU) {
-        if(menu_index == 1) { menu_index = 2; }
-        if(menu_index == 2) {}
+        if     (menu_index == 1) { menu_index = 2; }
+        else if(menu_index == 2) {  return; }
     }
 }
 
 void Key_Event_Confirm_SingleClcick_Handler(Button* btn, void* user_data) {
-    // 逻辑代码
+    if(currentState == STATE_MAIN_MENU) {
+        if     (menu_index == 1) { currentState = STATE_DDS_MODE_MENU; }
+        else if(menu_index == 2) { currentState = STATE_FIR_MODE_MENU; }
+    }
 }
 
 void Key_Event_Cancel_SingleClcick_Handler(Button* btn, void* user_data) {
-    // 逻辑代码
+    if(currentState == STATE_DDS_MODE_MENU) {
+        currentState = STATE_MAIN_MENU;
+        menu_index = 1;
+    }
+    else if(currentState == STATE_FIR_MODE_MENU) {
+        currentState = STATE_MAIN_MENU;
+        menu_index = 2;
+    }
 }
