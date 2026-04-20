@@ -1,7 +1,15 @@
 #pragma once
 
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include "xiicps.h"
 #include "xil_types.h"
+
+#include <stdio.h>
+
 #include "u8g2.h"
+
 
 typedef enum {
     STATE_MAIN_MENU,

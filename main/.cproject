@@ -51,11 +51,7 @@
                                 								
                                 <option id="xilinx.gnu.compiler.option.debugging.level.300006807" name="Debug Level" superClass="xilinx.gnu.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
                                 								
-                                <option id="xilinx.gnu.compiler.inferred.swplatform.includes.1746750490" name="Software Platform Include Path" superClass="xilinx.gnu.compiler.inferred.swplatform.includes" valueType="includePath">
-                                    									
-                                    <listOptionValue builtIn="false" value="${resolvePlatformFile:project=main,fileType=bspInclude}"/>
-                                    								
-                                </option>
+                                <option id="xilinx.gnu.compiler.inferred.swplatform.includes.1746750490" name="Software Platform Include Path" superClass="xilinx.gnu.compiler.inferred.swplatform.includes" valueType="includePath"/>
                                 								
                                 <option id="xilinx.gnu.compiler.inferred.swplatform.flags.1598189807" name="Software Platform Inferred Flags" superClass="xilinx.gnu.compiler.inferred.swplatform.flags" value=" " valueType="string"/>
                                 								
@@ -64,6 +60,10 @@
                                 <option id="xilinx.gnu.compiler.dircategory.includes.719634662" name="Include Paths" superClass="xilinx.gnu.compiler.dircategory.includes" useByScannerDiscovery="false" valueType="includePath">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/u8g2-master/csrc}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="${resolvePlatformFile:project=main,fileType=bspInclude}"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/MultiButton-master}&quot;"/>
                                     								
                                 </option>
                                 								

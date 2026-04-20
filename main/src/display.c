@@ -1,9 +1,5 @@
-#include "FreeRTOS.h"
-#include "task.h"
-#include "xiicps.h"
 #include "display.h"
-#include "u8g2.h"
-#include <stdio.h>
+
 /* -------------------------------------------------------- Driver -------------------------------------------------------- */
 XIicPs IicInstance;
 u8g2_t u8g2;
@@ -99,8 +95,6 @@ void Display_Refresh(void) {
             break;
     }
     u8g2_SendBuffer(&u8g2);
-
-    vTaskDelay(pdMS_TO_TICKS(100));
 }
 
 void Display_Draw_MainMenu(void) {
