@@ -1,15 +1,15 @@
 #include "display.h"
 
 /* -------------------------------------------------------- Driver -------------------------------------------------------- */
-XIicPs IicInstance;
-u8g2_t u8g2;
+static XIicPs IicInstance;
+static u8g2_t u8g2;
 
 // 用于缓存 u8g2 传输的 I2C 数据流，128 字节对于单次页/数据传输通常已足够
 static uint8_t i2c_buffer[128];
 static uint8_t i2c_buf_idx = 0;
 
 // u8g2 的 I2C 硬件通信回调
-uint8_t u8x8_byte_zynq_hw_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
+static uint8_t u8x8_byte_zynq_hw_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
     uint8_t *data;
     switch(msg) {
         case U8X8_MSG_BYTE_SEND:
@@ -37,7 +37,7 @@ uint8_t u8x8_byte_zynq_hw_i2c(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *
 }
 
 // u8g2 的延时和 GPIO 回调
-uint8_t u8x8_gpio_and_delay_zynq(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
+static uint8_t u8x8_gpio_and_delay_zynq(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
     switch(msg) {
         case U8X8_MSG_DELAY_MILLI:
             vTaskDelay(pdMS_TO_TICKS(arg_int)); // 使用 FreeRTOS 延时替代死等
@@ -62,8 +62,70 @@ void Display_Init(void) {
 
 /* -------------------------------------------------------- Scene -------------------------------------------------------- */
 static uint32_t ticks = 0;
-static DisplayState_t currentState = STATE_FIR_MODE_MENU;
-static uint8_t menu_index = 1;
+volatile DisplayState_t currentState = STATE_MAIN_MENU;
+volatile uint8_t menu_index = 1;
+
+static void Display_Draw_MainMenu(void) {
+    char buf[32];
+
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    snprintf(buf, sizeof(buf), "[Main Menu] T: %lu", ticks++); 
+    u8g2_DrawStr(&u8g2, 0, 10, buf);
+    u8g2_DrawHLine(&u8g2, 0, 12, 128);
+
+    // 简单的选中逻辑：在选中的行前面画个 ">"
+    if (menu_index == 1) u8g2_DrawStr(&u8g2, 5, 30, ">");
+    u8g2_DrawStr(&u8g2, 15, 30, "DDS Mode");
+    if (menu_index == 2) u8g2_DrawStr(&u8g2, 5, 45, ">");
+    u8g2_DrawStr(&u8g2, 15, 45, "FIR Mode");
+}
+static void Display_Draw_DDSMode(void) {
+    // 假设这些变量在其他地方定义，反映当前的信号参数
+    static float vpp = 3.3f;
+    static uint32_t freq = 10; // kHz
+    static const char* wave_type = "Sine";
+
+    char buf[32];
+
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    snprintf(buf, sizeof(buf), "[DDS Mode] T:%lu", ticks++);
+    u8g2_DrawStr(&u8g2, 0, 10, buf);
+    u8g2_DrawHLine(&u8g2, 0, 12, 128);
+
+    u8g2_DrawStr(&u8g2, 5, 28, "Wave:");
+    u8g2_DrawStr(&u8g2, 60, 28, wave_type);
+
+    u8g2_DrawStr(&u8g2, 5, 43, "Vpp:");
+    // 格式化浮点数，Zynq 的标准库通常支持 %f
+    // 如果不支持，可以转成整数部分和小数部分显示
+    snprintf(buf, sizeof(buf), "%.1f V", vpp);
+    u8g2_DrawStr(&u8g2, 60, 43, buf);
+
+    u8g2_DrawStr(&u8g2, 5, 58, "Freq:");
+    snprintf(buf, sizeof(buf), "%lu kHz", freq);
+    u8g2_DrawStr(&u8g2, 60, 58, buf);
+}
+static void Display_Draw_FIRMode(void) {
+    // 模拟当前选择的参数索引和状态
+    static const char* filter_type = "Band-Stop";
+
+    char buf[32];
+
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    snprintf(buf, sizeof(buf), "[FIR Mode] T:%lu", ticks++);
+    u8g2_DrawStr(&u8g2, 0, 10, buf);
+
+    u8g2_DrawStr(&u8g2, 5, 32, "Active:");
+    u8g2_DrawStr(&u8g2, 50, 32, filter_type);
+
+    u8g2_DrawStr(&u8g2, 5, 56, "> Start Learning");
+}
+static void Display_Draw_FIRModeLearningProgress(void) {
+
+}
+static void Display_Draw_FIRModeLearnComplete(void) {
+
+}
 
 void Display_Refresh(void) {
     // Test Display
@@ -95,66 +157,4 @@ void Display_Refresh(void) {
             break;
     }
     u8g2_SendBuffer(&u8g2);
-}
-
-void Display_Draw_MainMenu(void) {
-    char buf[32];
-
-    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    snprintf(buf, sizeof(buf), "[Main Menu] T: %lu", ticks++); 
-    u8g2_DrawStr(&u8g2, 0, 10, buf);
-    u8g2_DrawHLine(&u8g2, 0, 12, 128);
-
-    // 简单的选中逻辑：在选中的行前面画个 ">"
-    if (menu_index == 1) u8g2_DrawStr(&u8g2, 5, 30, ">");
-    u8g2_DrawStr(&u8g2, 15, 30, "DDS Mode");
-    if (menu_index == 2) u8g2_DrawStr(&u8g2, 5, 45, ">");
-    u8g2_DrawStr(&u8g2, 15, 45, "FIR Mode");
-}
-void Display_Draw_DDSMode(void) {
-    // 假设这些变量在其他地方定义，反映当前的信号参数
-    static float vpp = 3.3f;
-    static uint32_t freq = 10; // kHz
-    static const char* wave_type = "Sine";
-
-    char buf[32];
-
-    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    snprintf(buf, sizeof(buf), "[DDS Mode] T:%lu", ticks++);
-    u8g2_DrawStr(&u8g2, 0, 10, buf);
-    u8g2_DrawHLine(&u8g2, 0, 12, 128);
-
-    u8g2_DrawStr(&u8g2, 5, 28, "Wave:");
-    u8g2_DrawStr(&u8g2, 60, 28, wave_type);
-
-    u8g2_DrawStr(&u8g2, 5, 43, "Vpp:");
-    // 格式化浮点数，Zynq 的标准库通常支持 %f
-    // 如果不支持，可以转成整数部分和小数部分显示
-    snprintf(buf, sizeof(buf), "%.1f V", vpp);
-    u8g2_DrawStr(&u8g2, 60, 43, buf);
-
-    u8g2_DrawStr(&u8g2, 5, 58, "Freq:");
-    snprintf(buf, sizeof(buf), "%lu kHz", freq);
-    u8g2_DrawStr(&u8g2, 60, 58, buf);
-}
-void Display_Draw_FIRMode(void) {
-    // 模拟当前选择的参数索引和状态
-    static const char* filter_type = "Band-Stop";
-
-    char buf[32];
-
-    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    snprintf(buf, sizeof(buf), "[FIR Mode] T:%lu", ticks++);
-    u8g2_DrawStr(&u8g2, 0, 10, buf);
-
-    u8g2_DrawStr(&u8g2, 5, 32, "Active:");
-    u8g2_DrawStr(&u8g2, 50, 32, filter_type);
-
-    u8g2_DrawStr(&u8g2, 5, 56, "> Start Learning");
-}
-void Display_Draw_FIRModeLearningProgress(void) {
-
-}
-void Display_Draw_FIRModeLearnComplete(void) {
-
 }

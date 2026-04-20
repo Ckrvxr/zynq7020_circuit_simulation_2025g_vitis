@@ -51,11 +51,17 @@ uint8_t Key_Read_Callback(uint8_t button_id) {
 }
 
 void Key_Event_Up_SingleClcick_Handler(Button* btn, void* user_data) {
-    // 逻辑代码
+    if(currentState == STATE_MAIN_MENU) {
+        if(menu_index == 1) {}
+        if(menu_index == 2) { menu_index = 1; }
+    }
 }
 
 void Key_Event_Down_SingleClcick_Handler(Button* btn, void* user_data) {
-    // 逻辑代码
+    if(currentState == STATE_MAIN_MENU) {
+        if(menu_index == 1) { menu_index = 2; }
+        if(menu_index == 2) {}
+    }
 }
 
 void Key_Event_Confirm_SingleClcick_Handler(Button* btn, void* user_data) {

@@ -8,6 +8,7 @@
 #include "key.h"
 
 TaskHandle_t xDisplayTaskHandle;
+TaskHandle_t xTaskKeyPollingHandle;
 
 static void vDisplayTask(void *pvParameters) {
     Display_Init();
@@ -30,7 +31,7 @@ void vTaskKeyPolling(void *pvParameters) {
 int main( void )
 {
     xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
-    xTaskCreate(vTaskKeyPolling, "Key", 256, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
+    xTaskCreate(vTaskKeyPolling, "Key", 512, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
 
     xil_printf("System Starting...\r\n");
     

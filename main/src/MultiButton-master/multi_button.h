@@ -3,6 +3,10 @@
  * All rights reserved
  */
 
+#define MULTIBUTTON_THREAD_SAFE
+#define MULTIBUTTON_LOCK()    vTaskSuspendAll()
+#define MULTIBUTTON_UNLOCK()  xTaskResumeAll()
+
 #ifndef MULTI_BUTTON_H
 #define MULTI_BUTTON_H
 
@@ -15,7 +19,7 @@
 #define MULTIBUTTON_VERSION_PATCH 1
 
 // Configuration constants - can be modified according to your needs
-#define TICKS_INTERVAL          5    // ms - timer interrupt interval
+#define TICKS_INTERVAL          10    // ms - timer interrupt interval
 #define DEBOUNCE_TICKS          3    // MAX 7 (0 ~ 7) - debounce filter depth
 #define SHORT_TICKS             (300 / TICKS_INTERVAL)   // short press threshold
 #define LONG_TICKS              (1000 / TICKS_INTERVAL)  // long press threshold

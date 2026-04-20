@@ -10,7 +10,6 @@
 
 #include "u8g2.h"
 
-
 typedef enum {
     STATE_MAIN_MENU,
     STATE_DDS_MODE_MENU,
@@ -19,11 +18,8 @@ typedef enum {
     STATE_FIR_MODE_LEARN_COMPLETE
 } DisplayState_t;
 
+extern volatile DisplayState_t currentState;
+extern volatile uint8_t menu_index;
+
 void Display_Init(void);
 void Display_Refresh(void);
-
-void Display_Draw_MainMenu(void) ;
-void Display_Draw_DDSMode(void);
-void Display_Draw_FIRMode(void);
-void Display_Draw_FIRModeLearningProgress(void);
-void Display_Draw_FIRModeLearnComplete(void);

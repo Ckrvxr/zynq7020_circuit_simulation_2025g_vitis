@@ -8,6 +8,8 @@
 
 #include "multi_button.h"
 
+#include "display.h"
+
 void Key_Init(void);
 void Key_Ticks(void);
 uint8_t Key_Read_Callback(uint8_t button_id);
