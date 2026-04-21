@@ -21,17 +21,13 @@ static void vDisplayTask(void *pvParameters) {
 
 void vTaskKeyPolling(void *pvParameters) {
     Key_Init();
-
-    for(;;) {
-        Key_Ticks();
-        vTaskDelay(pdMS_TO_TICKS(10)); 
-    }
+    Key_Task(NULL);
 }
 
 int main( void )
 {
     xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
-    xTaskCreate(vTaskKeyPolling, "Key", 512, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
+    xTaskCreate(vTaskKeyPolling, "Key", 2048, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
 
     xil_printf("System Starting...\r\n");
     

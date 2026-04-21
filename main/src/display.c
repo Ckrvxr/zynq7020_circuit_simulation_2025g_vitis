@@ -63,6 +63,7 @@ void Display_Init(void) {
 /* -------------------------------------------------------- Scene -------------------------------------------------------- */
 volatile DisplayState_t currentState = STATE_MAIN_MENU;
 volatile uint8_t menu_index = 1;
+volatile uint8_t slect_index = 0;
 
 static void Display_Draw_LiveAnimation(int x, int y) {
     static uint8_t frame_idx = 0;
@@ -89,9 +90,9 @@ static void Display_Draw_MainMenu(void) {
     u8g2_DrawStr(&u8g2, 15, 45, "FIR Mode");
 }
 static void Display_Draw_DDSMode(void) {
-    // 假设这些变量在其他地方定义，反映当前的信号参数
-    static float vpp = 3.3f;
-    static uint32_t freq = 10; // kHz
+    extern volatile uint32_t dds_vpp;
+    extern volatile uint32_t dds_freq;
+
     static const char* wave_type = "Sine";
 
     char buf[32];
@@ -108,11 +109,11 @@ static void Display_Draw_DDSMode(void) {
     u8g2_DrawStr(&u8g2, 5, 43, "Vpp:");
     // 格式化浮点数，Zynq 的标准库通常支持 %f
     // 如果不支持，可以转成整数部分和小数部分显示
-    snprintf(buf, sizeof(buf), "%.1f V", vpp);
+    snprintf(buf, sizeof(buf), "%lu mV", dds_vpp);
     u8g2_DrawStr(&u8g2, 60, 43, buf);
 
     u8g2_DrawStr(&u8g2, 5, 58, "Freq:");
-    snprintf(buf, sizeof(buf), "%lu kHz", freq);
+    snprintf(buf, sizeof(buf), "%lu kHz", dds_freq);
     u8g2_DrawStr(&u8g2, 60, 58, buf);
 }
 static void Display_Draw_FIRMode(void) {

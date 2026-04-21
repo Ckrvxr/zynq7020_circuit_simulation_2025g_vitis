@@ -1,4 +1,19 @@
 #pragma once
 
-extern volatile uint32_t dds_vpp = 3300 // 0 ~ 5,000 -> 0 ~ 5 V
-extern volatile uint32_t dds_freq 100;  // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
+#include "xil_types.h"
+
+extern volatile uint32_t dds_vpp;
+extern volatile uint32_t dds_freq;
+
+void DDS_Vpp_Config(void);
+void DDS_Vpp_Plus(void);
+void DDS_Vpp_Minus(void);
+void DDS_Vpp_Exec(void);
+void DDS_Vpp_Cancel(void);
+
+
+void DDS_Freq_Config(void);
+void DDS_Freq_Plus(void);
+void DDS_Freq_Minus(void);
+void DDS_Freq_Exec(void);
+void DDS_Freq_Cancel(void);
