@@ -1,15 +1,10 @@
 #pragma once
-
 #include "xparameters.h"
 #include "xgpiops.h"
-
 #include "FreeRTOS.h"
 #include "task.h"
-
-
 #include "display.h"
 #include "dds.h"
-
 
 typedef enum {
     KEY_EVENT_NONE = 0,
@@ -31,21 +26,16 @@ typedef struct {
     XGpioPs *gpio_instance;
     
     Key_Event_Type_t last_event;
-    TickType_t press_start_tick;
+    TickType_t press_start_tick;   // 记录刚按下的那一刻
+    TickType_t last_trigger_tick;  // 专门记录上一次长按触发的时间 🆕
     uint8_t is_pressed;
     uint8_t long_press_triggered;
 } Key_Handle_t;
 
+#define KEY_DEBOUNCE_MS          50
+#define KEY_LONG_PRESS_MS        800   // 稍微调短一点，体感更灵敏
+#define KEY_LONG_PRESS_REPEAT_MS 150   // 连发间隔
 
-#define KEY_DEBOUNCE_MS         50
-#define KEY_LONG_PRESS_MS       1000
-#define KEY_LONG_PRESS_REPEAT_MS 200
-
+// 函数声明保持不变...
 void Key_Init(void);
 void Key_Task(void *pvParameters);
-void Key_Clear_Event(uint8_t key_id);
-
-void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event);
-void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event);
-void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event);
-void Key_Handler_Cancel(uint8_t key_id, Key_Event_Type_t event);

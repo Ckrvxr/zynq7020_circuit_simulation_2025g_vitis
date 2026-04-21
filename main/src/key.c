@@ -52,79 +52,72 @@ void Key_Init(void) {
 
 void Key_Task(void *pvParameters) {
     TickType_t last_wake_time = xTaskGetTickCount();
-    const TickType_t frequency = pdMS_TO_TICKS(10);
+    const TickType_t frequency = pdMS_TO_TICKS(10); // 10ms 扫描一次
     
     while(1) {
         TickType_t current_tick = xTaskGetTickCount();
 
         for(uint8_t i = 0; i < KEY_COUNT; i++) {
-            // 读取引脚状态 (假设低电平有效)
+            // 读取引脚状态 (低电平有效)
             uint8_t current_state = XGpioPs_ReadPin(keys[i].gpio_instance, keys[i].gpio_pin);
             
-            if(current_state == 0) { // 按键按下
+            if(current_state == 0) { // 【按键按下中】
                 if(!keys[i].is_pressed) {
-                    // 刚开始按下
+                    // --- 动作：首次按下 ---
                     keys[i].is_pressed = 1;
-                    keys[i].press_start_tick = current_tick;
+                    keys[i].press_start_tick = current_tick;     // 记录物理按下的绝对时刻
                     keys[i].long_press_triggered = 0;
                 } else {
-                    // 持续按下
-                    TickType_t press_duration = current_tick - keys[i].press_start_tick;
+                    // --- 动作：持续按住 ---
+                    // 计算从按下到现在总共过了多久
+                    TickType_t total_press_duration = current_tick - keys[i].press_start_tick;
                     
-                    // 检查是否达到长按阈值
-                    if(press_duration >= pdMS_TO_TICKS(KEY_LONG_PRESS_MS)) {
+                    // 检查是否达到长按门槛 (KEY_LONG_PRESS_MS = 1000ms)
+                    if(total_press_duration >= pdMS_TO_TICKS(KEY_LONG_PRESS_MS)) {
+                        
                         if(!keys[i].long_press_triggered) {
-                            // 第一次触发长按
+                            // 【首次触发长按】
                             keys[i].long_press_triggered = 1;
+                            keys[i].last_trigger_tick = current_tick; // 记录本次动作触发的时刻
                             keys[i].last_event = KEY_EVENT_LONG_PRESS_HOLD;
                             
-                            // 分发事件
-                            switch(keys[i].id) {
-                                case KEY_ID_UP: Key_Handler_Up(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD); break;
-                                case KEY_ID_DOWN: Key_Handler_Down(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD); break;
-                                case KEY_ID_CONFIRM: Key_Handler_Confirm(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD); break;
-                                case KEY_ID_CANCEL: Key_Handler_Cancel(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD); break;
-                            }
-                            
-                            // 重置计时器以便后续重复触发
-                            keys[i].press_start_tick = current_tick;
+                            // 分发第一次长按事件
+                            Key_Dispatch_Event(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD);
                         } else {
-                            // 长按重复触发
-                            TickType_t repeat_duration = current_tick - keys[i].press_start_tick;
+                            // 【长按连发阶段】
+                            // 计算距离上一次“动作触发”过了多久
+                            TickType_t repeat_duration = current_tick - keys[i].last_trigger_tick;
+                            
+                            // 检查是否达到重复触发间隔 (KEY_LONG_PRESS_REPEAT_MS = 200ms)
                             if(repeat_duration >= pdMS_TO_TICKS(KEY_LONG_PRESS_REPEAT_MS)) {
+                                keys[i].last_trigger_tick = current_tick; // 更新动作触发时刻
                                 keys[i].last_event = KEY_EVENT_LONG_PRESS_HOLD;
                                 
-                                // 分发事件
-                                switch(keys[i].id) {
-                                    case KEY_ID_UP: Key_Handler_Up(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD); break;
-                                    case KEY_ID_DOWN: Key_Handler_Down(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD); break;
-                                    case KEY_ID_CONFIRM: Key_Handler_Confirm(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD); break;
-                                    case KEY_ID_CANCEL: Key_Handler_Cancel(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD); break;
-                                }
-                                
-                                // 重置计时器以便下一次重复触发
-                                keys[i].press_start_tick = current_tick;
+                                // 分发连发事件
+                                Key_Dispatch_Event(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD);
                             }
                         }
                     }
                 }
-            } else { // 按键释放
+            } else { // 【按键已释放】
                 if(keys[i].is_pressed) {
-                    TickType_t press_duration = current_tick - keys[i].press_start_tick;
+                    // 计算释放前的总按住时间
+                    TickType_t final_duration = current_tick - keys[i].press_start_tick;
                     
-                    // 如果是短按 (大于去抖时间，且未触发长按，避免长按重复触发刷新计时后误判)
-                    if(!keys[i].long_press_triggered && press_duration >= pdMS_TO_TICKS(KEY_DEBOUNCE_MS)) {
+                    // 如果从未触发过长按，且按住时间超过去抖阈值，则判定为短按(单击)
+                    if(!keys[i].long_press_triggered && final_duration >= pdMS_TO_TICKS(KEY_DEBOUNCE_MS)) {
                         keys[i].last_event = KEY_EVENT_SINGLE_CLICK;
                         Key_Dispatch_Event(keys[i].id, KEY_EVENT_SINGLE_CLICK);
                     }
                     
-                    // 重置状态
+                    // 清空该按键所有状态，准备下一次按下
                     keys[i].is_pressed = 0;
                     keys[i].long_press_triggered = 0;
                 }
             }
         }
         
+        // 绝对定时，确保扫描周期稳定在 10ms
         vTaskDelayUntil(&last_wake_time, frequency);
     }
 }
