@@ -1,8 +1,11 @@
 #pragma once
-#include "xparameters.h"
-#include "xgpiops.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
+
+#include "xparameters.h"
+#include "xgpiops.h"
+
 #include "display.h"
 #include "dds.h"
 

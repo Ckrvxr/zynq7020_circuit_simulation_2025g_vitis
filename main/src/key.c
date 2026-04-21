@@ -8,6 +8,103 @@ extern volatile DisplayState_t currentState;
 extern volatile uint8_t menu_index;
 extern volatile uint8_t slect_index;
 
+static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
+    if(event == KEY_EVENT_SINGLE_CLICK) {
+        if(currentState == STATE_MAIN_MENU) {
+            if(menu_index > 1) { menu_index--; }
+        }
+        else if(currentState == STATE_DDS_MODE_MENU) {
+            if(slect_index == 0) {
+                if(menu_index > 1) { menu_index--; }
+            }
+            else if(slect_index == 1) {
+                DDS_Vpp_Plus();
+            }
+            else if(slect_index == 2) {
+                DDS_Freq_Plus(); 
+            }
+        }
+    }
+    else if(event == KEY_EVENT_LONG_PRESS_HOLD) {
+        if(currentState == STATE_DDS_MODE_MENU) {
+            if(slect_index == 1) { DDS_Vpp_Plus(); }
+            else if(slect_index == 2) { DDS_Freq_Plus(); }
+        }
+    }
+}
+
+static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
+    if(event == KEY_EVENT_SINGLE_CLICK) {
+        if(currentState == STATE_MAIN_MENU) {
+            if(menu_index < 2) { menu_index++; }
+        }
+        else if(currentState == STATE_DDS_MODE_MENU) {
+            if(slect_index == 0) {
+                if(menu_index < 2) { menu_index++; }
+            }
+            else if(slect_index == 1) {
+                DDS_Vpp_Minus();
+            }
+            else if(slect_index == 2) {
+                DDS_Freq_Minus();
+            }
+        }
+    }
+    else if(event == KEY_EVENT_LONG_PRESS_HOLD) {
+        if(currentState == STATE_DDS_MODE_MENU) {
+            if(slect_index == 1) { DDS_Vpp_Minus(); }
+            else if(slect_index == 2) { DDS_Freq_Minus(); }
+        }
+    }
+}
+
+static void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
+    if(event == KEY_EVENT_SINGLE_CLICK) {
+        if(currentState == STATE_MAIN_MENU) {
+            if(menu_index == 1) { currentState = STATE_DDS_MODE_MENU; }
+            else if(menu_index == 2) { currentState = STATE_FIR_MODE_MENU; }
+        }
+        else if(currentState == STATE_DDS_MODE_MENU) {
+            if(slect_index == 0) {
+                slect_index = menu_index; 
+                if(slect_index == 1) { DDS_Vpp_Config(); }
+                else if(slect_index == 2) { DDS_Freq_Config(); }
+            }
+            else if(slect_index == 1) {
+                DDS_Vpp_Exec();
+                slect_index = 0;
+            }
+            else if(slect_index == 2) {
+                DDS_Freq_Exec();
+                slect_index = 0;
+            }
+        }
+    }
+}
+
+static void Key_Handler_Cancel(uint8_t key_id, Key_Event_Type_t event) {
+    if(event == KEY_EVENT_SINGLE_CLICK) {
+        if(currentState == STATE_MAIN_MENU) {
+            return;
+        }
+        else if(currentState == STATE_DDS_MODE_MENU) {
+            if(slect_index == 0) {
+                currentState = STATE_MAIN_MENU;
+                menu_index = 1;
+            }
+            else if(slect_index == 1) {
+                DDS_Vpp_Cancel();
+                slect_index = 0;
+            }
+            else if(slect_index == 2) {
+                DDS_Freq_Cancel();
+                slect_index = 0;
+            }
+        }
+    }
+}
+
+
 static void Key_Dispatch_Event(uint8_t key_id, Key_Event_Type_t event) {
     switch(key_id) {
         case KEY_ID_UP:      Key_Handler_Up(key_id, event);      break;
@@ -122,104 +219,8 @@ void Key_Task(void *pvParameters) {
     }
 }
 
-void Key_Clear_Event(uint8_t key_id) {
-    if(key_id < KEY_COUNT) {
-        keys[key_id].last_event = KEY_EVENT_NONE;
-    }
-}
-
-void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
-    if(event == KEY_EVENT_SINGLE_CLICK) {
-        if(currentState == STATE_MAIN_MENU) {
-            if(menu_index > 1) { menu_index--; }
-        }
-        else if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 0) {
-                if(menu_index > 1) { menu_index--; }
-            }
-            else if(slect_index == 1) {
-                DDS_Vpp_Plus();
-            }
-            else if(slect_index == 2) {
-                DDS_Freq_Plus(); 
-            }
-        }
-    }
-    else if(event == KEY_EVENT_LONG_PRESS_HOLD) {
-        if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 1) { DDS_Vpp_Plus(); }
-            else if(slect_index == 2) { DDS_Freq_Plus(); }
-        }
-    }
-}
-
-void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
-    if(event == KEY_EVENT_SINGLE_CLICK) {
-        if(currentState == STATE_MAIN_MENU) {
-            if(menu_index < 2) { menu_index++; }
-        }
-        else if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 0) {
-                if(menu_index < 2) { menu_index++; }
-            }
-            else if(slect_index == 1) {
-                DDS_Vpp_Minus();
-            }
-            else if(slect_index == 2) {
-                DDS_Freq_Minus();
-            }
-        }
-    }
-    else if(event == KEY_EVENT_LONG_PRESS_HOLD) {
-        if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 1) { DDS_Vpp_Minus(); }
-            else if(slect_index == 2) { DDS_Freq_Minus(); }
-        }
-    }
-}
-
-void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
-    if(event == KEY_EVENT_SINGLE_CLICK) {
-        if(currentState == STATE_MAIN_MENU) {
-            if(menu_index == 1) { currentState = STATE_DDS_MODE_MENU; }
-            else if(menu_index == 2) { currentState = STATE_FIR_MODE_MENU; }
-        }
-        else if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 0) {
-                slect_index = menu_index; 
-                if(slect_index == 1) { DDS_Vpp_Config(); }
-                else if(slect_index == 2) { DDS_Freq_Config(); }
-            }
-            else if(slect_index == 1) {
-                DDS_Vpp_Exec();
-                slect_index = 0;
-            }
-            else if(slect_index == 2) {
-                DDS_Freq_Exec();
-                slect_index = 0;
-            }
-        }
-    }
-}
-
-void Key_Handler_Cancel(uint8_t key_id, Key_Event_Type_t event) {
-    if(event == KEY_EVENT_SINGLE_CLICK) {
-        if(currentState == STATE_MAIN_MENU) {
-            return;
-        }
-        else if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 0) {
-                currentState = STATE_MAIN_MENU;
-                menu_index = 1;
-            }
-            else if(slect_index == 1) {
-                DDS_Vpp_Cancel();
-                slect_index = 0;
-            }
-            else if(slect_index == 2) {
-                DDS_Freq_Cancel();
-                slect_index = 0;
-            }
-        }
-    }
-}
+// void Key_Clear_Event(uint8_t key_id) {
+//     if(key_id < KEY_COUNT) {
+//         keys[key_id].last_event = KEY_EVENT_NONE;
+//     }
+// }

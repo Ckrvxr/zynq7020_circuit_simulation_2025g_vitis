@@ -1,9 +1,9 @@
 #include "dds.h"
 
-volatile uint32_t dds_vpp  = 3300; // 0 ~ 5,000 -> 0 ~ 5 V
-volatile uint32_t dds_freq = 100;  // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
-volatile uint32_t dds_vpp_bak;     // 0 ~ 5,000 -> 0 ~ 5 V
-volatile uint32_t dds_freq_bak;    // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
+volatile int32_t dds_vpp  = 3300; // 0 ~ 5,000 -> 0 ~ 5 V
+volatile int32_t dds_freq = 100;  // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
+static int32_t dds_vpp_bak;     // 0 ~ 5,000 -> 0 ~ 5 V
+static int32_t dds_freq_bak;    // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
 
 
 void DDS_Vpp_Config(void) {
@@ -25,7 +25,7 @@ void DDS_Vpp_Cancel(void) {
 }
 
 void DDS_Freq_Config(void) {
-    dds_freq = dds_freq;
+    dds_freq_bak = dds_freq;
 }
 void DDS_Freq_Plus(void) {
     dds_freq += 100;

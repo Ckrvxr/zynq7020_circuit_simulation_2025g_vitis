@@ -2,8 +2,8 @@
 
 #include "xil_types.h"
 
-extern volatile uint32_t dds_vpp;
-extern volatile uint32_t dds_freq;
+extern volatile int32_t dds_vpp;
+extern volatile int32_t dds_freq;
 
 void DDS_Vpp_Config(void);
 void DDS_Vpp_Plus(void);

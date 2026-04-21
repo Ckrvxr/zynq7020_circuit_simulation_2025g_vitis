@@ -90,8 +90,8 @@ static void Display_Draw_MainMenu(void) {
     u8g2_DrawStr(&u8g2, 15, 45, "FIR Mode");
 }
 static void Display_Draw_DDSMode(void) {
-    extern volatile uint32_t dds_vpp;
-    extern volatile uint32_t dds_freq;
+    extern volatile int32_t dds_vpp;
+    extern volatile int32_t dds_freq;
 
     static const char* wave_type = "Sine";
 
@@ -113,7 +113,7 @@ static void Display_Draw_DDSMode(void) {
     u8g2_DrawStr(&u8g2, 60, 43, buf);
 
     u8g2_DrawStr(&u8g2, 5, 58, "Freq:");
-    snprintf(buf, sizeof(buf), "%lu kHz", dds_freq);
+    snprintf(buf, sizeof(buf), "%lu Hz", dds_freq);
     u8g2_DrawStr(&u8g2, 60, 58, buf);
 }
 static void Display_Draw_FIRMode(void) {
