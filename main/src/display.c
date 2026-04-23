@@ -103,16 +103,18 @@ static void Display_Draw_DDSMode(void) {
     Display_Draw_LiveAnimation(120, 5);
     u8g2_DrawHLine(&u8g2, 0, 14, 128);
 
-    u8g2_DrawStr(&u8g2, 5, 28, "Wave:");
+    u8g2_DrawStr(&u8g2, 15, 28, "Wave:");
     u8g2_DrawStr(&u8g2, 60, 28, wave_type);
 
-    u8g2_DrawStr(&u8g2, 5, 43, "Vpp:");
-    // 格式化浮点数，Zynq 的标准库通常支持 %f
-    // 如果不支持，可以转成整数部分和小数部分显示
+    if (menu_index == 1) u8g2_DrawStr(&u8g2, 5, 43, ">");
+    if (slect_index == 1) u8g2_DrawStr(&u8g2, 0, 43, "-");
+    u8g2_DrawStr(&u8g2, 15, 43, "Vpp:");
     snprintf(buf, sizeof(buf), "%lu mV", dds_vpp);
     u8g2_DrawStr(&u8g2, 60, 43, buf);
 
-    u8g2_DrawStr(&u8g2, 5, 58, "Freq:");
+    if (menu_index == 2) u8g2_DrawStr(&u8g2, 5, 58, ">");
+    if (slect_index == 2) u8g2_DrawStr(&u8g2, 0, 58, "-");
+    u8g2_DrawStr(&u8g2, 15, 58, "Freq:");
     snprintf(buf, sizeof(buf), "%lu Hz", dds_freq);
     u8g2_DrawStr(&u8g2, 60, 58, buf);
 }
@@ -126,11 +128,12 @@ static void Display_Draw_FIRMode(void) {
     Display_Draw_LiveAnimation(120, 5);
     u8g2_DrawHLine(&u8g2, 0, 14, 128);
 
+    u8g2_DrawStr(&u8g2, 15, 30, "Active:");
+    u8g2_DrawStr(&u8g2, 60, 30, filter_type);
 
-    u8g2_DrawStr(&u8g2, 5, 32, "Active:");
-    u8g2_DrawStr(&u8g2, 50, 32, filter_type);
-
-    u8g2_DrawStr(&u8g2, 5, 56, "> Start Learning");
+    if (menu_index == 1) u8g2_DrawStr(&u8g2, 5, 45, ">");
+    if (slect_index == 1) u8g2_DrawStr(&u8g2, 0, 45, "-");
+    u8g2_DrawStr(&u8g2, 15, 45, "Start Learning");
 }
 static void Display_Draw_FIRModeLearningProgress(void) {
 

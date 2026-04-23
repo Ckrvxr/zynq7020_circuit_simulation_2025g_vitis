@@ -60,14 +60,14 @@ static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
 
 static void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
     if(event == KEY_EVENT_SINGLE_CLICK) {
-        if(currentState == STATE_MAIN_MENU) {
-            if(menu_index == 1) { currentState = STATE_DDS_MODE_MENU; }
-            else if(menu_index == 2) { currentState = STATE_FIR_MODE_MENU; }
+        if     (currentState == STATE_MAIN_MENU) {
+            if     (menu_index == 1) { currentState = STATE_DDS_MODE_MENU; menu_index = 1; slect_index = 0; }
+            else if(menu_index == 2) { currentState = STATE_FIR_MODE_MENU; menu_index = 1; slect_index = 0; }
         }
         else if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 0) {
-                slect_index = menu_index; 
-                if(slect_index == 1) { DDS_Vpp_Config(); }
+            if     (slect_index == 0) {
+                slect_index = menu_index;
+                if     (slect_index == 1) { DDS_Vpp_Config(); }
                 else if(slect_index == 2) { DDS_Freq_Config(); }
             }
             else if(slect_index == 1) {
@@ -79,18 +79,25 @@ static void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
                 slect_index = 0;
             }
         }
+        else if(currentState == STATE_FIR_MODE_MENU) {
+            if     (slect_index == 0) {
+                slect_index = menu_index;
+            }
+            else if(slect_index == 1) {
+                // FIR Mode Learning Start
+            }
+        }
     }
 }
 
 static void Key_Handler_Cancel(uint8_t key_id, Key_Event_Type_t event) {
     if(event == KEY_EVENT_SINGLE_CLICK) {
-        if(currentState == STATE_MAIN_MENU) {
+        if     (currentState == STATE_MAIN_MENU) {
             return;
         }
         else if(currentState == STATE_DDS_MODE_MENU) {
             if(slect_index == 0) {
-                currentState = STATE_MAIN_MENU;
-                menu_index = 1;
+                currentState = STATE_MAIN_MENU; menu_index = 1; slect_index = 0;
             }
             else if(slect_index == 1) {
                 DDS_Vpp_Cancel();
@@ -98,6 +105,14 @@ static void Key_Handler_Cancel(uint8_t key_id, Key_Event_Type_t event) {
             }
             else if(slect_index == 2) {
                 DDS_Freq_Cancel();
+                slect_index = 0;
+            }
+        }
+        else if(currentState == STATE_FIR_MODE_MENU) {
+            if     (slect_index == 0) {
+                currentState = STATE_MAIN_MENU; menu_index = 1; slect_index = 0;
+            }
+            else if(slect_index == 1) {
                 slect_index = 0;
             }
         }
