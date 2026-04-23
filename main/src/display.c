@@ -53,7 +53,7 @@ void Display_Init(void) {
     XIicPs_Config *Config = XIicPs_LookupConfig(XPAR_PS7_I2C_0_DEVICE_ID);
     XIicPs_CfgInitialize(&IicInstance, Config, Config->BaseAddress);
     XIicPs_SetSClk(&IicInstance, 400000);
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    vTaskDelay(pdMS_TO_TICKS(100));
     // 2. 初始化 u8g2，如果是 SSD1306 屏幕可以直接把 ssd1315 换成 ssd1306
     u8g2_Setup_ssd1315_i2c_128x64_noname_f(&u8g2, U8G2_R0, u8x8_byte_zynq_hw_i2c, u8x8_gpio_and_delay_zynq);
     u8g2_InitDisplay(&u8g2);
@@ -64,112 +64,126 @@ void Display_Init(void) {
 volatile DisplayState_t currentState = STATE_MAIN_MENU;
 volatile uint8_t menu_index = 1;
 volatile uint8_t slect_index = 0;
+uint32_t frame_count = 0;
 
 static void Display_Draw_LiveAnimation(int x, int y) {
-    static uint8_t frame_idx = 0;
     u8g2_SetDrawColor(&u8g2, 1);
-    switch ( frame_idx % 4 ) {
-        case 0: u8g2_DrawLine(&u8g2, x-3, y, x+3, y);     break;
+    uint8_t phase = (frame_count / 2) % 4;
+    switch (phase) {
+        case 0: u8g2_DrawLine(&u8g2, x-3, y,   x+3, y);   break;
         case 1: u8g2_DrawLine(&u8g2, x-2, y-2, x+2, y+2); break;
-        case 2: u8g2_DrawLine(&u8g2, x, y-3, x, y+3);     break;
+        case 2: u8g2_DrawLine(&u8g2, x,   y-3, x,   y+3); break;
         case 3: u8g2_DrawLine(&u8g2, x+2, y-2, x-2, y+2); break;
     }
-    frame_idx++;
+    if ((frame_count / 8) % 2) {
+        u8g2_DrawPixel(&u8g2, x-5, y-5);
+        u8g2_DrawPixel(&u8g2, x+5, y+5);
+    }
 }
+
+static void Display_Draw_Cursor(int y, uint8_t is_selected, uint8_t is_editing) {
+    if (!is_selected) return;
+    int8_t offset = (frame_count / 4) % 4;
+    if (offset > 2) offset = 4 - offset; 
+    if (is_editing) {
+        if ((frame_count / 4) % 2) u8g2_DrawStr(&u8g2, 2, y, "*");
+    } else {
+        u8g2_DrawStr(&u8g2, 5 + offset, y, ">");
+    }
+}
+
+static void Display_Draw_WaveMini(int x, int y, int w, int h) {
+    u8g2_DrawFrame(&u8g2, x, y, w, h);
+    static const int8_t sin_table[16] = {0, 48, 90, 117, 127, 117, 90, 48, 0, -48, -90, -117, -127, -117, -90, -48};
+    for (int i = 1; i < w - 1; i++) {
+        uint8_t idx = ((i >> 2) + frame_count) % 16; 
+        int py = y + (h / 2) + (sin_table[idx] * (h / 2 - 2) / 128);
+        u8g2_DrawPixel(&u8g2, x + i, py);
+    }
+}
+
 static void Display_Draw_MainMenu(void) {
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-
     u8g2_DrawStr(&u8g2, 0, 10, "[Main Menu]");
     Display_Draw_LiveAnimation(120, 5);
     u8g2_DrawHLine(&u8g2, 0, 14, 128);
 
-    // 简单的选中逻辑：在选中的行前面画个 ">"
-    if (menu_index == 1) u8g2_DrawStr(&u8g2, 5, 30, ">");
-    u8g2_DrawStr(&u8g2, 15, 30, "DDS Mode");
-    if (menu_index == 2) u8g2_DrawStr(&u8g2, 5, 45, ">");
-    u8g2_DrawStr(&u8g2, 15, 45, "FIR Mode");
+    Display_Draw_Cursor(30, (menu_index == 1), 0);
+    u8g2_DrawStr(&u8g2, 18, 30, "DDS Mode");
+
+    Display_Draw_Cursor(45, (menu_index == 2), 0);
+    u8g2_DrawStr(&u8g2, 18, 45, "FIR Mode");
 }
+
 static void Display_Draw_DDSMode(void) {
     extern volatile int32_t dds_vpp;
     extern volatile int32_t dds_freq;
-
-    static const char* wave_type = "Sine";
-
     char buf[32];
 
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-
     u8g2_DrawStr(&u8g2, 0, 10, "[DDS Mode]");
     Display_Draw_LiveAnimation(120, 5);
     u8g2_DrawHLine(&u8g2, 0, 14, 128);
 
-    u8g2_DrawStr(&u8g2, 15, 28, "Wave:");
-    u8g2_DrawStr(&u8g2, 60, 28, wave_type);
+    u8g2_DrawStr(&u8g2, 15, 28, "Wave:"); 
+    Display_Draw_WaveMini(65, 18, 45, 12);
 
-    if (menu_index == 1) u8g2_DrawStr(&u8g2, 5, 43, ">");
-    if (slect_index == 1) u8g2_DrawStr(&u8g2, 0, 43, "-");
+    Display_Draw_Cursor(43, (menu_index == 1), (slect_index == 1));
     u8g2_DrawStr(&u8g2, 15, 43, "Vpp:");
-    snprintf(buf, sizeof(buf), "%lu mV", dds_vpp);
-    u8g2_DrawStr(&u8g2, 60, 43, buf);
+    snprintf(buf, sizeof(buf), "%ld mV", dds_vpp);
+    u8g2_DrawStr(&u8g2, 65, 43, buf);
 
-    if (menu_index == 2) u8g2_DrawStr(&u8g2, 5, 58, ">");
-    if (slect_index == 2) u8g2_DrawStr(&u8g2, 0, 58, "-");
+    Display_Draw_Cursor(58, (menu_index == 2), (slect_index == 2));
     u8g2_DrawStr(&u8g2, 15, 58, "Freq:");
-    snprintf(buf, sizeof(buf), "%lu Hz", dds_freq);
-    u8g2_DrawStr(&u8g2, 60, 58, buf);
+    snprintf(buf, sizeof(buf), "%ld Hz", dds_freq);
+    u8g2_DrawStr(&u8g2, 65, 58, buf);
 }
+
 static void Display_Draw_FIRMode(void) {
-    // 模拟当前选择的参数索引和状态
-    static const char* filter_type = "Band-Stop";
-
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-
     u8g2_DrawStr(&u8g2, 0, 10, "[FIR Mode]");
     Display_Draw_LiveAnimation(120, 5);
     u8g2_DrawHLine(&u8g2, 0, 14, 128);
 
-    u8g2_DrawStr(&u8g2, 15, 30, "Active:");
-    u8g2_DrawStr(&u8g2, 60, 30, filter_type);
+    u8g2_DrawStr(&u8g2, 15, 30, "Type: Band-Stop");
 
-    if (menu_index == 1) u8g2_DrawStr(&u8g2, 5, 45, ">");
-    if (slect_index == 1) u8g2_DrawStr(&u8g2, 0, 45, "-");
+    Display_Draw_Cursor(45, (menu_index == 1), (slect_index == 1));
     u8g2_DrawStr(&u8g2, 15, 45, "Start Learning");
 }
+
 static void Display_Draw_FIRModeLearningProgress(void) {
+    uint8_t progress = (frame_count % 101); 
+    char buf[16];
 
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    u8g2_DrawStr(&u8g2, 0, 10, "[Learning...]");
+    Display_Draw_LiveAnimation(120, 5);
+    
+    u8g2_DrawFrame(&u8g2, 10, 30, 108, 10);
+    u8g2_DrawBox(&u8g2, 12, 32, progress, 6);
+    
+    snprintf(buf, sizeof(buf), "Proc: %d%%", progress);
+    u8g2_DrawStr(&u8g2, 35, 55, buf);
 }
-static void Display_Draw_FIRModeLearnComplete(void) {
 
+static void Display_Draw_FIRModeLearnComplete(void) {
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    u8g2_DrawStr(&u8g2, 20, 35, "LEARN DONE!");
+    if ((frame_count / 4) % 2) {
+        u8g2_DrawFrame(&u8g2, 15, 20, 98, 25);
+    }
+    u8g2_DrawStr(&u8g2, 25, 60, "Press Back");
 }
 
 void Display_Refresh(void) {
-    // Test Display
-    // static uint32_t count = 0;
-    // static char buf[32];
-    // u8g2_ClearBuffer(&u8g2);
-    // u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    // u8g2_DrawStr(&u8g2, 0, 15, "u8g2 on Zynq!");
-    // snprintf(buf, sizeof(buf), "Count: ", count++);
-    // u8g2_DrawStr(&u8g2, 0, 35, buf);
-    // u8g2_SendBuffer(&u8g2);
-
     u8g2_ClearBuffer(&u8g2);
     switch (currentState) {
-        case STATE_MAIN_MENU:
-            Display_Draw_MainMenu();
-            break;
-        case STATE_DDS_MODE_MENU:
-            Display_Draw_DDSMode();
-            break;
-        case STATE_FIR_MODE_MENU:
-            Display_Draw_FIRMode();
-            break;
-        case STATE_FIR_MODE_LEARNING:
-            Display_Draw_FIRModeLearningProgress();
-            break;
-        case STATE_FIR_MODE_LEARN_COMPLETE:
-            Display_Draw_FIRModeLearnComplete();
-            break;
+        case STATE_MAIN_MENU:               Display_Draw_MainMenu(); break;
+        case STATE_DDS_MODE_MENU:           Display_Draw_DDSMode();  break;
+        case STATE_FIR_MODE_MENU:           Display_Draw_FIRMode();  break;
+        case STATE_FIR_MODE_LEARNING:       Display_Draw_FIRModeLearningProgress(); break;
+        case STATE_FIR_MODE_LEARN_COMPLETE: Display_Draw_FIRModeLearnComplete();    break;
     }
     u8g2_SendBuffer(&u8g2);
+    frame_count++; 
 }

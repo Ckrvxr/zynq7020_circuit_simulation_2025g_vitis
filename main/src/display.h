@@ -6,7 +6,10 @@
 #include "xiicps.h"
 #include "xil_types.h"
 
+#include <math.h>
+
 #include <stdio.h>
+// #include <math.h>
 
 #include "u8g2.h"
 
