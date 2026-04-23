@@ -8,7 +8,17 @@ extern volatile DisplayState_t currentState;
 extern volatile uint8_t menu_index;
 extern volatile uint8_t slect_index;
 
+#define ACCEL_STAGE_1_MS    3000
+#define ACCEL_STAGE_2_MS    6000
+
 static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
+    uint32_t step = 1;
+    if (event == KEY_EVENT_LONG_PRESS_HOLD) {
+        TickType_t duration = xTaskGetTickCount() - keys[key_id].press_start_tick;
+        uint32_t duration_ms = (uint32_t)(duration * 1000 / configTICK_RATE_HZ);
+        if (duration_ms >= ACCEL_STAGE_2_MS) { step = 100; } 
+        else if (duration_ms >= ACCEL_STAGE_1_MS) {step = 10;}
+    }
     if(event == KEY_EVENT_SINGLE_CLICK) {
         if(currentState == STATE_MAIN_MENU) {
             if(menu_index > 1) { menu_index--; }
@@ -18,22 +28,29 @@ static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
                 if(menu_index > 1) { menu_index--; }
             }
             else if(slect_index == 1) {
-                DDS_Vpp_Plus();
+                for(uint32_t i = 0; i < step; i++) DDS_Vpp_Plus(); 
             }
             else if(slect_index == 2) {
-                DDS_Freq_Plus(); 
+                for(uint32_t i = 0; i < step; i++) DDS_Freq_Plus(); 
             }
         }
     }
     else if(event == KEY_EVENT_LONG_PRESS_HOLD) {
         if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 1) { DDS_Vpp_Plus(); }
-            else if(slect_index == 2) { DDS_Freq_Plus(); }
+            if(slect_index == 1) { for(uint32_t i = 0; i < step; i++) DDS_Vpp_Plus(); }
+            else if(slect_index == 2) { for(uint32_t i = 0; i < step; i++) DDS_Freq_Plus(); }
         }
     }
 }
 
 static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
+    uint32_t step = 1;
+    if (event == KEY_EVENT_LONG_PRESS_HOLD) {
+        TickType_t duration = xTaskGetTickCount() - keys[key_id].press_start_tick;
+        uint32_t duration_ms = (uint32_t)(duration * 1000 / configTICK_RATE_HZ);
+        if (duration_ms >= ACCEL_STAGE_2_MS) { step = 100; } 
+        else if (duration_ms >= ACCEL_STAGE_1_MS) {step = 10;}
+    }
     if(event == KEY_EVENT_SINGLE_CLICK) {
         if(currentState == STATE_MAIN_MENU) {
             if(menu_index < 2) { menu_index++; }
@@ -43,17 +60,17 @@ static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
                 if(menu_index < 2) { menu_index++; }
             }
             else if(slect_index == 1) {
-                DDS_Vpp_Minus();
+                for(uint32_t i = 0; i < step; i++) DDS_Vpp_Minus(); 
             }
             else if(slect_index == 2) {
-                DDS_Freq_Minus();
+                for(uint32_t i = 0; i < step; i++) DDS_Freq_Minus();
             }
         }
     }
     else if(event == KEY_EVENT_LONG_PRESS_HOLD) {
         if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 1) { DDS_Vpp_Minus(); }
-            else if(slect_index == 2) { DDS_Freq_Minus(); }
+            if(slect_index == 1) { for(uint32_t i = 0; i < step; i++) DDS_Vpp_Minus(); }
+            else if(slect_index == 2) { for(uint32_t i = 0; i < step; i++) DDS_Freq_Minus(); }
         }
     }
 }
@@ -164,72 +181,50 @@ void Key_Init(void) {
 
 void Key_Task(void *pvParameters) {
     TickType_t last_wake_time = xTaskGetTickCount();
-    const TickType_t frequency = pdMS_TO_TICKS(10); // 10ms 扫描一次
+    const TickType_t frequency = pdMS_TO_TICKS(50);
     
     while(1) {
         TickType_t current_tick = xTaskGetTickCount();
 
         for(uint8_t i = 0; i < KEY_COUNT; i++) {
-            // 读取引脚状态 (低电平有效)
             uint8_t current_state = XGpioPs_ReadPin(keys[i].gpio_instance, keys[i].gpio_pin);
             
-            if(current_state == 0) { // 【按键按下中】
+            if(current_state == 0) {
                 if(!keys[i].is_pressed) {
-                    // --- 动作：首次按下 ---
                     keys[i].is_pressed = 1;
-                    keys[i].press_start_tick = current_tick;     // 记录物理按下的绝对时刻
+                    keys[i].press_start_tick = current_tick;
                     keys[i].long_press_triggered = 0;
                 } else {
-                    // --- 动作：持续按住 ---
-                    // 计算从按下到现在总共过了多久
                     TickType_t total_press_duration = current_tick - keys[i].press_start_tick;
-                    
-                    // 检查是否达到长按门槛 (KEY_LONG_PRESS_MS = 1000ms)
                     if(total_press_duration >= pdMS_TO_TICKS(KEY_LONG_PRESS_MS)) {
                         
                         if(!keys[i].long_press_triggered) {
-                            // 【首次触发长按】
                             keys[i].long_press_triggered = 1;
-                            keys[i].last_trigger_tick = current_tick; // 记录本次动作触发的时刻
+                            keys[i].last_trigger_tick = current_tick;
                             keys[i].last_event = KEY_EVENT_LONG_PRESS_HOLD;
-                            
-                            // 分发第一次长按事件
                             Key_Dispatch_Event(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD);
                         } else {
-                            // 【长按连发阶段】
-                            // 计算距离上一次“动作触发”过了多久
                             TickType_t repeat_duration = current_tick - keys[i].last_trigger_tick;
-                            
-                            // 检查是否达到重复触发间隔 (KEY_LONG_PRESS_REPEAT_MS = 200ms)
                             if(repeat_duration >= pdMS_TO_TICKS(KEY_LONG_PRESS_REPEAT_MS)) {
-                                keys[i].last_trigger_tick = current_tick; // 更新动作触发时刻
+                                keys[i].last_trigger_tick = current_tick;
                                 keys[i].last_event = KEY_EVENT_LONG_PRESS_HOLD;
-                                
-                                // 分发连发事件
                                 Key_Dispatch_Event(keys[i].id, KEY_EVENT_LONG_PRESS_HOLD);
                             }
                         }
                     }
                 }
-            } else { // 【按键已释放】
+            } else {
                 if(keys[i].is_pressed) {
-                    // 计算释放前的总按住时间
                     TickType_t final_duration = current_tick - keys[i].press_start_tick;
-                    
-                    // 如果从未触发过长按，且按住时间超过去抖阈值，则判定为短按(单击)
                     if(!keys[i].long_press_triggered && final_duration >= pdMS_TO_TICKS(KEY_DEBOUNCE_MS)) {
                         keys[i].last_event = KEY_EVENT_SINGLE_CLICK;
                         Key_Dispatch_Event(keys[i].id, KEY_EVENT_SINGLE_CLICK);
                     }
-                    
-                    // 清空该按键所有状态，准备下一次按下
                     keys[i].is_pressed = 0;
                     keys[i].long_press_triggered = 0;
                 }
             }
         }
-        
-        // 绝对定时，确保扫描周期稳定在 10ms
         vTaskDelayUntil(&last_wake_time, frequency);
     }
 }
