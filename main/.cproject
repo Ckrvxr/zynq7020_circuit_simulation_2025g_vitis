@@ -51,7 +51,11 @@
                                 								
                                 <option id="xilinx.gnu.compiler.option.debugging.level.300006807" name="Debug Level" superClass="xilinx.gnu.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
                                 								
-                                <option id="xilinx.gnu.compiler.inferred.swplatform.includes.1746750490" name="Software Platform Include Path" superClass="xilinx.gnu.compiler.inferred.swplatform.includes"/>
+                                <option id="xilinx.gnu.compiler.inferred.swplatform.includes.1746750490" name="Software Platform Include Path" superClass="xilinx.gnu.compiler.inferred.swplatform.includes" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="${resolvePlatformFile:project=main,fileType=bspInclude}"/>
+                                    								
+                                </option>
                                 								
                                 <option id="xilinx.gnu.compiler.inferred.swplatform.flags.1598189807" name="Software Platform Inferred Flags" superClass="xilinx.gnu.compiler.inferred.swplatform.flags" value=" " valueType="string"/>
                                 								
@@ -71,7 +75,7 @@
                                     								
                                 </option>
                                 								
-                                <option id="xilinx.gnu.compiler.symbols.defined.42182603" name="Defined symbols (-D)" superClass="xilinx.gnu.compiler.symbols.defined" useByScannerDiscovery="false" valueType="definedSymbols"/>
+                                <option id="xilinx.gnu.compiler.symbols.defined.42182603" name="Defined symbols (-D)" superClass="xilinx.gnu.compiler.symbols.defined" useByScannerDiscovery="false"/>
                                 								
                                 <inputType id="xilinx.gnu.armv7.c.compiler.input.746736908" name="C source files" superClass="xilinx.gnu.armv7.c.compiler.input"/>
                                 							
