@@ -63,12 +63,6 @@
                                 								
                                 <option id="xilinx.gnu.compiler.dircategory.includes.719634662" name="Include Paths" superClass="xilinx.gnu.compiler.dircategory.includes" useByScannerDiscovery="false" valueType="includePath">
                                     									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/CMSIS-DSP-main/Include}&quot;"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/CMSIS-DSP-main/PrivateInclude}&quot;"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/CMSIS_6-main/CMSIS/Core/Include}&quot;"/>
-                                    									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/u8g2-master/csrc}&quot;"/>
                                     									
                                     <listOptionValue builtIn="false" value="${resolvePlatformFile:project=main,fileType=bspInclude}"/>

@@ -6,6 +6,7 @@
 
 #include "display.h"
 #include "key.h"
+#include "bram.h"
 
 TaskHandle_t xDisplayTaskHandle;
 TaskHandle_t xTaskKeyPollingHandle;
@@ -26,12 +27,20 @@ void vTaskKeyPolling(void *pvParameters) {
 
 int main( void )
 {
+    BRAM_Init();
+    BRAM_Write(0, 0x051EB851);
+    // BRAM_Write(1, 0x00400800);
+    // BRAM_Write(3, 0x00000000);
+    // BRAM_Write(3, 0x0000000B);
+
     xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
     xTaskCreate(vTaskKeyPolling, "Key", 2048, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
 
     xil_printf("System Starting...\r\n");
     
     vTaskStartScheduler();
+
+
 
     for( ;; );
 }
