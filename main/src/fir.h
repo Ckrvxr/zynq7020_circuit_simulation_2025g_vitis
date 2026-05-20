@@ -3,9 +3,12 @@
 #include "xil_types.h"
 #include "xil_printf.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+
 #include "bram.h"
+#include "dds.h"
 
-
-void FIR_Config(void);
+void FIR_Learn(void);
 void FIR_Exec(void);
 void FIR_Cancel(void);
