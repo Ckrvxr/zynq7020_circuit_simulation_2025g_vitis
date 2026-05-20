@@ -27,19 +27,18 @@ void vTaskKeyPolling(void *pvParameters) {
     Key_Task(NULL);
 }
 
-static volatile uint32_t data = 0xF0000004;
-static volatile uint32_t addr_w  = 3;
-static volatile uint32_t addr_r  = 3;
-static volatile uint32_t tmp;
+// void vMainTask(void *pvParameters) {
+//     BRAM_Write(0, 0x051EB851);
+//     vTaskDelay(pdMS_TO_TICKS(100));
+//     BRAM_Write(1, 0x00400800);
+//     vTaskDelay(pdMS_TO_TICKS(100));
+//     BRAM_Write(3, 0x00000003);
+//     vTaskDelay(pdMS_TO_TICKS(100));
 
-void vMainTask(void *pvParameters) {
-  while (1) {
-	  	BRAM_Write(addr_w, data);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        tmp = BRAM_Read(addr_r);
-        xil_printf("[MainTask] Read from BRAM: addr=0x%08X, data=0x%08X\r\n", addr_r * 4, tmp);
-  }
-}
+//   while (1) {
+// 	  vTaskDelay(pdMS_TO_TICKS(1000));
+//   }
+// }
 
 int main( void )
 {
@@ -47,7 +46,7 @@ int main( void )
 
     xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
     xTaskCreate(vTaskKeyPolling, "Key", 2048, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
-    xTaskCreate(vMainTask, "Main", 2048, NULL, tskIDLE_PRIORITY + 1, &xMainTaskHandle);
+    // xTaskCreate(vMainTask, "Main", 2048, NULL, tskIDLE_PRIORITY + 1, &xMainTaskHandle);
 
     xil_printf("System Starting...\r\n");
     

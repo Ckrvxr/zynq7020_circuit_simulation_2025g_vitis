@@ -1,24 +1,25 @@
 #include "dds.h"
 
-volatile int32_t dds_vpp  = 3300; // 0 ~ 5,000 -> 0 ~ 5 V
-volatile int32_t dds_freq = 100;  // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
-static int32_t dds_vpp_bak;     // 0 ~ 5,000 -> 0 ~ 5 V
-static int32_t dds_freq_bak;    // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
-
+volatile uint32_t dds_vpp  = 27; // 0 ~ 5,000 -> 0 ~ 5 V
+volatile uint32_t dds_freq = 1000;  // 0 ~ 1,000,000,000 -> 0 ~ 1 Ghz
+static uint32_t dds_vpp_bak;
+static uint32_t dds_freq_bak;
 
 void DDS_Vpp_Config(void) {
     dds_vpp_bak = dds_vpp;
 }
 void DDS_Vpp_Plus(void) {
-    dds_vpp += 100;
-    if (dds_vpp > 5000) dds_vpp = 5000;
+    if (dds_vpp >= 5000) return;
+    // dds_vpp += 100;
+    dds_vpp += 1;
 }
 void DDS_Vpp_Minus(void) {
-    dds_vpp -= 100;
-    if (dds_vpp < 0) dds_vpp = 0;
+    if (dds_vpp <= 0) return;
+    // dds_vpp -= 100;
+    dds_vpp -= 1;
 }
 void DDS_Vpp_Exec(void) {
-    //
+    DDS_Send_Command();
 }
 void DDS_Vpp_Cancel(void) {
     dds_vpp = dds_vpp_bak;
@@ -28,16 +29,57 @@ void DDS_Freq_Config(void) {
     dds_freq_bak = dds_freq;
 }
 void DDS_Freq_Plus(void) {
+    if (dds_freq >= 1000000000) return;
     dds_freq += 100;
-    if (dds_freq > 1000000) dds_freq = 1000000;
 }
 void DDS_Freq_Minus(void) {
+    if (dds_freq <= 0) return;
     dds_freq -= 100;
-    if (dds_freq < 0) dds_freq = 0;
 }
-void DDS_Freq_Exec(void){
-    // 
+void DDS_Freq_Exec(void) {
+    DDS_Send_Command(); 
 }
 void DDS_Freq_Cancel(void){
     dds_freq = dds_freq_bak;
+}
+
+/**
+ * @brief 计算 32 位 DDS 的相位递增字 (FTW)
+ *
+ * @param f_out 目标输出频率 (Hz)
+ * @param f_clk 系统主时钟频率 (Hz)
+ * @return uint32_t 返回 32 位的相位递增字
+ */
+static uint32_t Freq_to_FTW(uint32_t f_out, uint32_t f_clk) {
+  uint64_t pow_2_32 = 1ULL << 32;
+  // 防溢出处理：先将 f_out 强转为 64 位，再做乘法
+  uint64_t temp = ((uint64_t)f_out * pow_2_32) + (f_clk / 2);
+  uint32_t ftw = (uint32_t)(temp / f_clk);
+  return ftw;
+}
+
+static uint32_t Vpp_to_DACGain(uint32_t vpp) {
+    // 将 0 ~ 5000 mV 映射到 0 ~ 4095 (12-bit DAC)
+    if (vpp > 5000) vpp = 5000; // 限制最大值
+    uint32_t dac_value = (vpp + 25) / 50;
+    return vpp;
+}
+
+void DDS_Send_Command() {
+    uint32_t cmd = 0;
+
+    // Set DDS Frequency
+    uint32_t ftw = Freq_to_FTW((uint32_t)dds_freq, 50000000);
+    cmd = ftw;
+    BRAM_Write(0, cmd);
+    // Set DDS Vpp
+    uint32_t dac_gain = Vpp_to_DACGain((uint32_t)dds_vpp);
+    cmd = BRAM_Read(1) ;
+    cmd &= ~(0x0FFF << 16);             // 清空原有的 DAC_GAIN (位 27:16)
+    cmd |= ((dac_gain & 0x0FFF) << 16); // 写入新的 DAC_GAIN 到对应位域
+    BRAM_Write(1, cmd);                 // 写入 ADDR_GAIN (地址 1)
+    // DDS Update Trigger
+    cmd = BRAM_Read(3);                 // 读取当前状态寄存器 (地址 3)
+    cmd |= (1 << 0) | (1 << 1);         // 同时将 Bit 0 和 Bit 1 置 1 触发更新
+    BRAM_Write(3, cmd);
 }

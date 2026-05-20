@@ -66,17 +66,17 @@ volatile uint8_t menu_index = 1;
 volatile uint8_t slect_index = 0;
 uint32_t frame_count = 0;
 
-static void Format_With_Commas(int32_t n, char *out_buf) {
+static void Format_With_Commas(uint32_t n, char *out_buf) {
     char temp[32];
-    int len = snprintf(temp, sizeof(temp), "%ld", n);
-    int commas = (len - 1) / 3; // 计算需要多少个逗号
+    int len = snprintf(temp, sizeof(temp), "%u", (unsigned int)n);
+    int commas = (len - 1) / 3;
     int out_len = len + commas;
     int i = len - 1, j = out_len - 1, count = 0;
 
     out_buf[out_len] = '\0';
     while (i >= 0) {
-        if (count > 0 && count % 3 == 0 && temp[i] != '-') {
-            out_buf[j--] = ',';
+        if (count > 0 && count % 3 == 0) {
+        out_buf[j--] = ',';
         }
         out_buf[j--] = temp[i--];
         count++;
@@ -133,8 +133,8 @@ static void Display_Draw_MainMenu(void) {
 }
 
 static void Display_Draw_DDSMode(void) {
-    extern volatile int32_t dds_vpp;
-    extern volatile int32_t dds_freq;
+    extern volatile uint32_t dds_vpp;
+    extern volatile uint32_t dds_freq;
     char buf[64];
     char formatted_val[32];
 
