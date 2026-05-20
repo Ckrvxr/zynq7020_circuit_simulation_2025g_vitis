@@ -1,7 +1,7 @@
 #include "dds.h"
 
-volatile uint32_t dds_vpp  = 27; // 0 ~ 5,000 -> 0 ~ 5 V
-volatile uint32_t dds_freq = 1000;  // 0 ~ 1,000,000,000 -> 0 ~ 1 Ghz
+volatile uint32_t dds_vpp  = 1000;  // 0 ~ 8,000 -> 0 ~ 8 V
+volatile uint32_t dds_freq = 100;  // 0 ~ 1,000,000,000 -> 0 ~ 1 Ghz
 static uint32_t dds_vpp_bak;
 static uint32_t dds_freq_bak;
 
@@ -59,10 +59,11 @@ static uint32_t Freq_to_FTW(uint32_t f_out, uint32_t f_clk) {
 }
 
 static uint32_t Vpp_to_DACGain(uint32_t vpp) {
-    // 将 0 ~ 5000 mV 映射到 0 ~ 4095 (12-bit DAC)
-    if (vpp > 5000) vpp = 5000; // 限制最大值
-    uint32_t dac_value = (vpp + 25) / 50;
-    return vpp;
+    // 将 0 ~ 8,000 mV 映射到 0 ~ 255 (12-bit DAC,实际只有 8-bit 有效)
+    uint32_t dac_value = (vpp * 255 + 4000) / 8000;
+    // if (dac_value > 4) dac_value -= 1;
+    if (dac_value > 255) dac_value = 255;
+    return dac_value;
 }
 
 void DDS_Send_Command() {

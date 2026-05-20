@@ -11,7 +11,6 @@
 
 TaskHandle_t xDisplayTaskHandle;
 TaskHandle_t xTaskKeyPollingHandle;
-TaskHandle_t xMainTaskHandle;
 
 static void vDisplayTask(void *pvParameters) {
     Display_Init();
@@ -27,18 +26,6 @@ void vTaskKeyPolling(void *pvParameters) {
     Key_Task(NULL);
 }
 
-// void vMainTask(void *pvParameters) {
-//     BRAM_Write(0, 0x051EB851);
-//     vTaskDelay(pdMS_TO_TICKS(100));
-//     BRAM_Write(1, 0x00400800);
-//     vTaskDelay(pdMS_TO_TICKS(100));
-//     BRAM_Write(3, 0x00000003);
-//     vTaskDelay(pdMS_TO_TICKS(100));
-
-//   while (1) {
-// 	  vTaskDelay(pdMS_TO_TICKS(1000));
-//   }
-// }
 
 int main( void )
 {
@@ -46,8 +33,7 @@ int main( void )
 
     xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
     xTaskCreate(vTaskKeyPolling, "Key", 2048, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
-    // xTaskCreate(vMainTask, "Main", 2048, NULL, tskIDLE_PRIORITY + 1, &xMainTaskHandle);
-
+    
     xil_printf("System Starting...\r\n");
     
     vTaskStartScheduler();
