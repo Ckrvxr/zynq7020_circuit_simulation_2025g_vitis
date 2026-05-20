@@ -27,7 +27,7 @@ void BRAM_Init(void) {
   }
 
   Initialized = 1;
-  xil_printf("BRAM: Initialized OK\r\n");
+  xil_printf("[BRAM] BRAM Initialize: OK\r\n");
 }
 
 int BRAM_SelfTest(void) {
@@ -37,15 +37,13 @@ int BRAM_SelfTest(void) {
 }
 
 void BRAM_Write(uint32_t addr, uint32_t data) {
-  xil_printf("DEBUG: MemBase=0x%08X, offset=%d, target=0x%08X\r\n",
-             Bram.Config.MemBaseAddress, addr * 4,
-             Bram.Config.MemBaseAddress + addr * 4);
+  xil_printf("[BRAM] BRAM Write: data=0x%08X -> addr=0x%08X\r\n", data, Bram.Config.MemBaseAddress + addr * 4);
 
   XBram_WriteReg(Bram.Config.MemBaseAddress, addr * 4, data);
 }
 
-uint32_t BRAM_Read(uint32_t byte_offset) {
+uint32_t BRAM_Read(uint32_t addr) {
   if (!Initialized)
     return 0;
-  return XBram_ReadReg(Bram.Config.MemBaseAddress, byte_offset);
+  return XBram_ReadReg(Bram.Config.MemBaseAddress, addr * 4);
 }
