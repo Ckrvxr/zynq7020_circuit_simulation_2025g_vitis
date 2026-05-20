@@ -1,10 +1,10 @@
 #pragma once
 
-#include "FreeRTOS.h"
-#include "task.h"
-
 #include "xparameters.h"
 #include "xgpiops.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "display.h"
 #include "dds.h"
@@ -39,6 +39,5 @@ typedef struct {
 #define KEY_LONG_PRESS_MS        800
 #define KEY_LONG_PRESS_REPEAT_MS 200 
 
-// 函数声明保持不变...
 void Key_Init(void);
 void Key_Task(void *pvParameters);

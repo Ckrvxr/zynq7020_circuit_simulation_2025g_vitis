@@ -1,9 +1,10 @@
 #pragma once
 
+#include "xil_printf.h"
 #include "xil_types.h"
 #include "xparameters.h"
 #include "xbram.h"
-#include "xil_printf.h"
+
 
 #define BRAM_WORD_SIZE  4   // 32-bit = 4 bytes
 

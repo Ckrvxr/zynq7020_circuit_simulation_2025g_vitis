@@ -1,15 +1,13 @@
 #pragma once
 
+#include "xil_types.h"
+#include "xiicps.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "xiicps.h"
-#include "xil_types.h"
-
-#include <math.h>
-
 #include <stdio.h>
-// #include <math.h>
+#include <math.h>
 
 #include "u8g2.h"
 

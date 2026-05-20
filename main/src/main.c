@@ -1,9 +1,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "xparameters.h"
 #include "xil_printf.h"
 #include "xil_types.h"
+#include "xparameters.h"
 
 #include "display.h"
 #include "key.h"
