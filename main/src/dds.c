@@ -1,46 +1,48 @@
 #include "dds.h"
 
 volatile uint32_t dds_vpp  = 1000;  // 0 ~ 8,000 -> 0 ~ 8 V
-volatile uint32_t dds_freq = 100;  // 0 ~ 1,000,000,000 -> 0 ~ 1 Ghz
+volatile uint32_t dds_freq = 100;  // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
 static uint32_t dds_vpp_bak;
 static uint32_t dds_freq_bak;
 
 void DDS_Vpp_Config(void) {
     dds_vpp_bak = dds_vpp;
 }
-void DDS_Vpp_Plus(void) {
-    if (dds_vpp >= 5000) return;
-    // dds_vpp += 100;
-    dds_vpp += 1;
+void DDS_Vpp_PlusorMinus(int32_t delta) {
+    if (delta > 0) {
+        dds_vpp += (uint32_t)delta;
+        if (dds_vpp > 8000) dds_vpp = 8000;
+    } else if (delta < 0) {
+        uint32_t abs_delta = (uint32_t)(-delta);
+        if (dds_vpp < abs_delta) dds_vpp = 0;
+        else dds_vpp -= abs_delta;
+    }
 }
-void DDS_Vpp_Minus(void) {
-    if (dds_vpp <= 0) return;
-    // dds_vpp -= 100;
-    dds_vpp -= 1;
+void DDS_Vpp_Cancel(void) { 
+    dds_vpp = dds_vpp_bak; 
 }
 void DDS_Vpp_Exec(void) {
     DDS_Send_Command();
-}
-void DDS_Vpp_Cancel(void) {
-    dds_vpp = dds_vpp_bak;
 }
 
 void DDS_Freq_Config(void) {
     dds_freq_bak = dds_freq;
 }
-void DDS_Freq_Plus(void) {
-    if (dds_freq >= 1000000000) return;
-    dds_freq += 100;
+void DDS_Freq_PlusorMinus(int32_t delta) {
+    if (delta > 0) {
+        dds_freq += (uint32_t)delta;
+        if (dds_freq > 1000000) dds_freq = 1000000;
+    } else if (delta < 0) {
+        uint32_t abs_delta = (uint32_t)(-delta);
+        if (dds_freq < abs_delta) dds_freq = 0;
+        else dds_freq -= abs_delta;
+    }
 }
-void DDS_Freq_Minus(void) {
-    if (dds_freq <= 0) return;
-    dds_freq -= 100;
+void DDS_Freq_Cancel(void) {
+     dds_freq = dds_freq_bak; 
 }
 void DDS_Freq_Exec(void) {
     DDS_Send_Command(); 
-}
-void DDS_Freq_Cancel(void){
-    dds_freq = dds_freq_bak;
 }
 
 /**

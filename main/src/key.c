@@ -8,16 +8,20 @@ extern volatile DisplayState_t currentState;
 extern volatile uint8_t menu_index;
 extern volatile uint8_t slect_index;
 
-#define ACCEL_STAGE_1_MS    3000
-#define ACCEL_STAGE_2_MS    6000
+#define ACCEL_LEVEL_1_MS    1400
+#define ACCEL_LEVEL_2_MS    2400
+#define ACCEL_LEVEL_3_MS    3400
+#define ACCEL_LEVEL_4_MS    4400
 
 static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
-    uint32_t step = 1;
+    uint32_t step_vpp = 1, step_freq = 1;
     if (event == KEY_EVENT_LONG_PRESS_HOLD) {
         TickType_t duration = xTaskGetTickCount() - keys[key_id].press_start_tick;
         uint32_t duration_ms = (uint32_t)(duration * 1000 / configTICK_RATE_HZ);
-        if (duration_ms >= ACCEL_STAGE_2_MS) { step = 100; } 
-        else if (duration_ms >= ACCEL_STAGE_1_MS) {step = 10;}
+        if      (duration_ms >= ACCEL_LEVEL_4_MS) { step_freq = 10000; step_vpp = 1000; }
+        else if (duration_ms >= ACCEL_LEVEL_3_MS) { step_vpp = 1000;  step_freq = 1000; }
+        else if (duration_ms >= ACCEL_LEVEL_2_MS) { step_vpp = 100;   step_freq = 100;  }
+        else if (duration_ms >= ACCEL_LEVEL_1_MS) { step_vpp = 10;    step_freq = 10;   }
     }
     if(event == KEY_EVENT_SINGLE_CLICK) {
         if(currentState == STATE_MAIN_MENU) {
@@ -28,28 +32,30 @@ static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
                 if(menu_index > 1) { menu_index--; }
             }
             else if(slect_index == 1) {
-                for(uint32_t i = 0; i < step; i++) DDS_Vpp_Plus(); 
+                DDS_Vpp_PlusorMinus((int32_t)step_vpp);
             }
             else if(slect_index == 2) {
-                for(uint32_t i = 0; i < step; i++) DDS_Freq_Plus(); 
+                DDS_Freq_PlusorMinus((int32_t)step_freq);
             }
         }
     }
     else if(event == KEY_EVENT_LONG_PRESS_HOLD) {
         if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 1) { for(uint32_t i = 0; i < step; i++) DDS_Vpp_Plus(); }
-            else if(slect_index == 2) { for(uint32_t i = 0; i < step; i++) DDS_Freq_Plus(); }
+            if(slect_index == 1) { DDS_Vpp_PlusorMinus((int32_t)step_vpp); }
+            else if(slect_index == 2) { DDS_Freq_PlusorMinus((int32_t)step_freq); }
         }
     }
 }
 
 static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
-    uint32_t step = 1;
+    uint32_t step_vpp = 1, step_freq = 1;
     if (event == KEY_EVENT_LONG_PRESS_HOLD) {
         TickType_t duration = xTaskGetTickCount() - keys[key_id].press_start_tick;
         uint32_t duration_ms = (uint32_t)(duration * 1000 / configTICK_RATE_HZ);
-        if (duration_ms >= ACCEL_STAGE_2_MS) { step = 100; } 
-        else if (duration_ms >= ACCEL_STAGE_1_MS) {step = 10;}
+        if      (duration_ms >= ACCEL_LEVEL_4_MS) { step_freq = 10000; step_vpp = 1000; }
+        else if (duration_ms >= ACCEL_LEVEL_3_MS) { step_vpp = 1000;  step_freq = 1000; }
+        else if (duration_ms >= ACCEL_LEVEL_2_MS) { step_vpp = 100;   step_freq = 100;  }
+        else if (duration_ms >= ACCEL_LEVEL_1_MS) { step_vpp = 10;    step_freq = 10;   }
     }
     if(event == KEY_EVENT_SINGLE_CLICK) {
         if(currentState == STATE_MAIN_MENU) {
@@ -60,17 +66,17 @@ static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
                 if(menu_index < 2) { menu_index++; }
             }
             else if(slect_index == 1) {
-                for(uint32_t i = 0; i < step; i++) DDS_Vpp_Minus(); 
+                DDS_Vpp_PlusorMinus(-(int32_t)step_vpp);
             }
             else if(slect_index == 2) {
-                for(uint32_t i = 0; i < step; i++) DDS_Freq_Minus();
+                DDS_Freq_PlusorMinus(-(int32_t)step_freq);
             }
         }
     }
     else if(event == KEY_EVENT_LONG_PRESS_HOLD) {
         if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 1) { for(uint32_t i = 0; i < step; i++) DDS_Vpp_Minus(); }
-            else if(slect_index == 2) { for(uint32_t i = 0; i < step; i++) DDS_Freq_Minus(); }
+            if(slect_index == 1) { DDS_Vpp_PlusorMinus(-(int32_t)step_vpp); }
+            else if(slect_index == 2) { DDS_Freq_PlusorMinus(-(int32_t)step_freq); }
         }
     }
 }
