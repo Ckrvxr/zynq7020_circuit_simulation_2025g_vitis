@@ -1,4 +1,5 @@
 #include "key.h"
+#include "fir.h"
 
 static Key_Handle_t keys[KEY_COUNT];
 
@@ -103,12 +104,22 @@ static void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
             }
         }
         else if(currentState == STATE_FIR_MODE_MENU) {
-            if     (slect_index == 0) {
+            if(slect_index == 0) {
                 slect_index = menu_index;
             }
             else if(slect_index == 1) {
-                // FIR Mode Learning Start
+                FIR_Learn();
+                currentState = STATE_FIR_MODE_LEARNING;
+                slect_index = 0;
             }
+        }
+        else if(currentState == STATE_FIR_MODE_LEARNING) {
+            return;
+        }
+        else if(currentState == STATE_FIR_MODE_LEARN_COMPLETE) {
+            FIR_Exec();
+            currentState = STATE_FIR_MODE_MENU;
+            slect_index = 0;
         }
     }
 }
@@ -132,12 +143,22 @@ static void Key_Handler_Cancel(uint8_t key_id, Key_Event_Type_t event) {
             }
         }
         else if(currentState == STATE_FIR_MODE_MENU) {
-            if     (slect_index == 0) {
+            if(slect_index == 0) {
                 currentState = STATE_MAIN_MENU; menu_index = 1; slect_index = 0;
             }
             else if(slect_index == 1) {
                 slect_index = 0;
             }
+        }
+        else if(currentState == STATE_FIR_MODE_LEARNING) {
+            FIR_Cancel();
+            currentState = STATE_FIR_MODE_MENU;
+            slect_index = 0;
+        }
+        else if(currentState == STATE_FIR_MODE_LEARN_COMPLETE) {
+            FIR_Exec();
+            currentState = STATE_FIR_MODE_MENU;
+            slect_index = 0;
         }
     }
 }
