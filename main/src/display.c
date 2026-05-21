@@ -178,13 +178,14 @@ static void Display_Draw_FIRMode(void) {
     Display_Draw_LiveAnimation(120, 5);
     u8g2_DrawHLine(&u8g2, 0, 14, 128);
 
-    u8g2_DrawStr(&u8g2, 15, 30, "Type: Band-Stop");
+    Display_Draw_Cursor(30, (menu_index == 1), (slect_index == 1));
+    u8g2_DrawStr(&u8g2, 18, 30, "1. Run Filter");
 
-    Display_Draw_Cursor(43, (menu_index == 1), (slect_index == 1));
-    u8g2_DrawStr(&u8g2, 18, 43, "1. Calibrate");
+    Display_Draw_Cursor(45, (menu_index == 2), (slect_index == 2));
+    u8g2_DrawStr(&u8g2, 18, 45, "2. Start Learning");
 
-    Display_Draw_Cursor(58, (menu_index == 2), (slect_index == 2));
-    u8g2_DrawStr(&u8g2, 18, 58, "2. Start Learning");
+    Display_Draw_Cursor(60, (menu_index == 3), (slect_index == 3));
+    u8g2_DrawStr(&u8g2, 18, 60, "3. Calibrate");
 }
 
 static void Display_Draw_FIRModeLearningProgress(void) {

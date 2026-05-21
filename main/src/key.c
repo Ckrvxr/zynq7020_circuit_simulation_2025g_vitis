@@ -110,7 +110,7 @@ static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
             }
         }
         else if(currentState == STATE_FIR_MODE_MENU) {
-            if(menu_index < 2) { menu_index++; }
+            if(menu_index < 3) { menu_index++; }
         }
         else if(currentState == STATE_FIR_MODE_LEARN_COMPLETE) {
             if(menu_index < 3) { menu_index++; }
@@ -150,16 +150,20 @@ static void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
                 slect_index = menu_index;
             }
             else if(slect_index == 1) {
-                currentState = STATE_FIR_CALIBRATING;
+                FIR_Exec();
                 slect_index = 0;
-                FIR_Calibrate();
-                currentState = STATE_FIR_MODE_MENU;
             }
             else if(slect_index == 2) {
                 currentState = STATE_FIR_MODE_LEARNING;
                 slect_index = 0;
                 FIR_Learn();
                 currentState = STATE_FIR_MODE_LEARN_COMPLETE;
+            }
+            else if(slect_index == 3) {
+                currentState = STATE_FIR_CALIBRATING;
+                slect_index = 0;
+                FIR_Calibrate();
+                currentState = STATE_FIR_MODE_MENU;
             }
         }
         else if(currentState == STATE_FIR_MODE_LEARNING) {
@@ -198,7 +202,7 @@ static void Key_Handler_Cancel(uint8_t key_id, Key_Event_Type_t event) {
             if(slect_index == 0) {
                 currentState = STATE_MAIN_MENU; menu_index = 1; slect_index = 0;
             }
-            else if(slect_index == 1 || slect_index == 2) {
+            else if(slect_index > 0) {
                 slect_index = 0;
             }
         }
