@@ -212,16 +212,99 @@ static void Display_Draw_FIRModeLearningProgress(void) {
 }
 
 static void Display_Draw_FIRModeLearnComplete(void) {
+    char buf[64];
+
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
     u8g2_DrawStr(&u8g2, 0, 10, "[LEARN DONE]");
     Display_Draw_LiveAnimation(120, 5);
     u8g2_DrawHLine(&u8g2, 0, 14, 128);
 
-    u8g2_DrawStr(&u8g2, 10, 32, "Type: Band-Stop");
-    if ((frame_count / 6) % 2) {
-        u8g2_DrawFrame(&u8g2, 15, 38, 98, 18);
+    Display_Draw_Cursor(30, (menu_index == 1), 0);
+    snprintf(buf, sizeof(buf), "1.View Curve(%s)", fir_type_abbr[fir_filter_type]);
+    u8g2_DrawStr(&u8g2, 18, 30, buf);
+
+    Display_Draw_Cursor(45, (menu_index == 2), 0);
+    u8g2_DrawStr(&u8g2, 18, 45, "2.Apply Filter");
+
+    Display_Draw_Cursor(60, (menu_index == 3), 0);
+    u8g2_DrawStr(&u8g2, 18, 60, "3.Cancel");
+}
+
+static void Display_Draw_FIRCurveView(void) {
+    char buf[16];
+
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    u8g2_DrawStr(&u8g2, 0, 10, "[Freq Response]");
+    Display_Draw_LiveAnimation(120, 5);
+    u8g2_DrawHLine(&u8g2, 0, 14, 128);
+
+    // 预计算 1040 个频点的 dB 值
+    float fir_dB[1040];
+    float sum_dB = 0.0f;
+    for (int i = 0; i < 1040; i++) {
+        uint32_t mag2 = (uint32_t)(fir_i_data[i] * fir_i_data[i]) +
+                        (uint32_t)(fir_r_data[i] * fir_r_data[i]);
+        if (mag2 < 1) mag2 = 1;
+        fir_dB[i] = 10.0f * log10f((float)mag2);
+        sum_dB += fir_dB[i];
     }
-    u8g2_DrawStr(&u8g2, 30, 52, "Press Back");
+
+    // 中心化：相对均值
+    float mean_dB = sum_dB / 1040.0f;
+    float min_dB = 100.0f, max_dB = -100.0f;
+    for (int i = 0; i < 1040; i++) {
+        fir_dB[i] -= mean_dB;
+        if (fir_dB[i] < min_dB) min_dB = fir_dB[i];
+        if (fir_dB[i] > max_dB) max_dB = fir_dB[i];
+    }
+
+    float range_dB = max_dB - min_dB;
+    if (range_dB < 10.0f) {
+        float half = range_dB / 2.0f;
+        max_dB = half > 5.0f ? half : 5.0f;
+        min_dB = -max_dB;
+    }
+
+    const int AX_LEFT  = 32;
+    const int AX_RIGHT = 124;
+    const int AX_TOP   = 18;
+    const int AX_BOT   = 53;
+
+    int y_mid = (AX_TOP + AX_BOT) / 2;
+
+    // Y 轴标签（上 / 中 / 下）
+    snprintf(buf, sizeof(buf), "%.0f", max_dB);
+    u8g2_DrawStr(&u8g2, 0, AX_TOP + 4, buf);
+    snprintf(buf, sizeof(buf), "%.0f", (max_dB + min_dB) / 2.0f);
+    u8g2_DrawStr(&u8g2, 0, y_mid + 4, buf);
+    snprintf(buf, sizeof(buf), "%.0f", min_dB);
+    u8g2_DrawStr(&u8g2, 0, AX_BOT + 4, buf);
+
+    // 右上角标注 "dB"
+    u8g2_DrawStr(&u8g2, AX_RIGHT - 12, AX_TOP - 2, "dB");
+
+    // 左右竖边框
+    u8g2_DrawVLine(&u8g2, AX_LEFT, AX_TOP, AX_BOT - AX_TOP);
+    u8g2_DrawVLine(&u8g2, AX_RIGHT, AX_TOP, AX_BOT - AX_TOP + 1);
+
+    // 横网格线：上下虚线，中间实线
+    for (int x = AX_LEFT + 1; x < AX_RIGHT; x += 4) {
+        u8g2_DrawPixel(&u8g2, x, AX_TOP);
+        u8g2_DrawPixel(&u8g2, x, AX_BOT);
+    }
+    u8g2_DrawHLine(&u8g2, AX_LEFT + 1, y_mid, AX_RIGHT - AX_LEFT - 1);
+
+    // 绘制相对 dB 曲线
+    for (int x = AX_LEFT + 1; x < AX_RIGHT; x++) {
+        int idx = (x - AX_LEFT - 1) * 1040 / (AX_RIGHT - AX_LEFT - 1);
+        float v = fir_dB[idx];
+        int py = AX_BOT - (int)((v - min_dB) * (AX_BOT - AX_TOP) / (max_dB - min_dB));
+        if (py >= AX_TOP && py <= AX_BOT) u8g2_DrawPixel(&u8g2, x, py);
+    }
+
+    // X 轴标签
+    u8g2_DrawStr(&u8g2, AX_LEFT, 62, "50Hz");
+    u8g2_DrawStr(&u8g2, AX_RIGHT - 30, 62, "60kHz");
 }
 
 void Display_Refresh(void) {
@@ -232,6 +315,7 @@ void Display_Refresh(void) {
         case STATE_FIR_MODE_MENU:           Display_Draw_FIRMode();  break;
         case STATE_FIR_MODE_LEARNING:       Display_Draw_FIRModeLearningProgress(); break;
         case STATE_FIR_MODE_LEARN_COMPLETE: Display_Draw_FIRModeLearnComplete();    break;
+        case STATE_FIR_CURVE_VIEW:          Display_Draw_FIRCurveView();            break;
     }
     u8g2_SendBuffer(&u8g2);
     frame_count++; 

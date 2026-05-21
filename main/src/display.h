@@ -18,7 +18,8 @@ typedef enum {
     STATE_DDS_MODE_MENU,
     STATE_FIR_MODE_MENU,
     STATE_FIR_MODE_LEARNING,
-    STATE_FIR_MODE_LEARN_COMPLETE
+    STATE_FIR_MODE_LEARN_COMPLETE,
+    STATE_FIR_CURVE_VIEW
 } DisplayState_t;
 
 extern volatile DisplayState_t currentState;
