@@ -18,20 +18,30 @@ extern volatile DisplayState_t currentState;
 extern volatile uint8_t menu_index;
 extern volatile uint8_t slect_index;
 
-#define ACCEL_LEVEL_1_MS 1400
-#define ACCEL_LEVEL_2_MS 2400
-#define ACCEL_LEVEL_3_MS 3400
-#define ACCEL_LEVEL_4_MS 4400
+#define FREQ_ACCEL_THRESHOLD_MS 3000
 
 static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
-    uint32_t step_vpp = 1, step_freq = 1;
+    uint32_t step_vpp = 100, step_freq = 1;
     if (event == KEY_EVENT_LONG_PRESS_HOLD) {
         TickType_t duration = xTaskGetTickCount() - keys[key_id].press_start_tick;
         uint32_t duration_ms = (uint32_t)(duration * 1000 / configTICK_RATE_HZ);
-        if      (duration_ms >= ACCEL_LEVEL_4_MS) { step_freq = 10000; step_vpp = 1000; }
-        else if (duration_ms >= ACCEL_LEVEL_3_MS) { step_vpp = 1000;  step_freq = 1000; }
-        else if (duration_ms >= ACCEL_LEVEL_2_MS) { step_vpp = 100;   step_freq = 100;  }
-        else if (duration_ms >= ACCEL_LEVEL_1_MS) { step_vpp = 10;    step_freq = 10;   }
+        if (duration_ms >= FREQ_ACCEL_THRESHOLD_MS) {
+            uint32_t excess_ms = duration_ms - FREQ_ACCEL_THRESHOLD_MS;
+            uint32_t exp_full = excess_ms / 1000;
+            uint32_t tenths   = (excess_ms % 1000) / 100;
+            switch (exp_full) {
+                case 0: step_freq = 1;    break;
+                case 1: step_freq = 10;   break;
+                case 2: step_freq = 100;  break;
+                case 3: step_freq = 1000; break;
+                default: step_freq = 10000; break;
+            }
+            if (tenths > 0) {
+                static const uint32_t frac_tbl[] = {126,158,200,251,316,398,501,631,794};
+                step_freq = (step_freq * frac_tbl[tenths - 1]) / 100;
+            }
+            if (step_freq > 10000) step_freq = 10000;
+        }
     }
     if(event == KEY_EVENT_SINGLE_CLICK) {
         if(currentState == STATE_MAIN_MENU) {
@@ -58,14 +68,27 @@ static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
 }
 
 static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
-    uint32_t step_vpp = 1, step_freq = 1;
+    uint32_t step_vpp = 100, step_freq = 1;
     if (event == KEY_EVENT_LONG_PRESS_HOLD) {
         TickType_t duration = xTaskGetTickCount() - keys[key_id].press_start_tick;
         uint32_t duration_ms = (uint32_t)(duration * 1000 / configTICK_RATE_HZ);
-        if      (duration_ms >= ACCEL_LEVEL_4_MS) { step_freq = 10000; step_vpp = 1000; }
-        else if (duration_ms >= ACCEL_LEVEL_3_MS) { step_vpp = 1000;  step_freq = 1000; }
-        else if (duration_ms >= ACCEL_LEVEL_2_MS) { step_vpp = 100;   step_freq = 100;  }
-        else if (duration_ms >= ACCEL_LEVEL_1_MS) { step_vpp = 10;    step_freq = 10;   }
+        if (duration_ms >= FREQ_ACCEL_THRESHOLD_MS) {
+            uint32_t excess_ms = duration_ms - FREQ_ACCEL_THRESHOLD_MS;
+            uint32_t exp_full = excess_ms / 1000;
+            uint32_t tenths   = (excess_ms % 1000) / 100;
+            switch (exp_full) {
+                case 0: step_freq = 1;    break;
+                case 1: step_freq = 10;   break;
+                case 2: step_freq = 100;  break;
+                case 3: step_freq = 1000; break;
+                default: step_freq = 10000; break;
+            }
+            if (tenths > 0) {
+                static const uint32_t frac_tbl[] = {126,158,200,251,316,398,501,631,794};
+                step_freq = (step_freq * frac_tbl[tenths - 1]) / 100;
+            }
+            if (step_freq > 10000) step_freq = 10000;
+        }
     }
     if(event == KEY_EVENT_SINGLE_CLICK) {
         if(currentState == STATE_MAIN_MENU) {

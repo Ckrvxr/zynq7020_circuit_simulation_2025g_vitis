@@ -4,8 +4,8 @@
 
 #include "bram.h"
 
-volatile uint32_t dds_vpp  = 1000;  // 0 ~ 8,000 -> 0 ~ 8 V
-volatile uint32_t dds_freq = 50000;  // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
+volatile uint32_t dds_vpp  = 3300;   // 0 ~ 7,500 -> 0 ~ 7.5 V
+volatile uint32_t dds_freq = 10000;  // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
 static uint32_t dds_vpp_bak;
 static uint32_t dds_freq_bak;
 
@@ -15,7 +15,7 @@ void DDS_Vpp_Config(void) {
 void DDS_Vpp_PlusorMinus(int32_t delta) {
     if (delta > 0) {
         dds_vpp += (uint32_t)delta;
-        if (dds_vpp > 8000) dds_vpp = 8000;
+        if (dds_vpp > 7500) dds_vpp = 7500;
     } else if (delta < 0) {
         uint32_t abs_delta = (uint32_t)(-delta);
         if (dds_vpp < abs_delta) dds_vpp = 0;
@@ -67,13 +67,28 @@ uint32_t DDS_Freq_to_FTW(uint32_t f_out, uint32_t f_clk) {
 /**
  * @brief 将峰峰值 (Vpp) 转换为 DAC 增益值
  *
- * @param vpp 峰峰值，单位为 mV (0 ~ 8000 mV)
+ * @param vpp 峰峰值，单位为 mV (0 ~ 7500 mV)
  * @return uint32_t 返回对应的 DAC 增益值 (0 ~ 255)
  */
+/**
+ * @brief 将峰峰值 (Vpp) 转换为 DAC 增益值（含硬件校准偏置补偿）
+ *
+ * 硬件实测校准数据（DAC值 → 实际输出电压）:
+ *   DAC=34 → 1.12V,  DAC=112 → 3.52V,  DAC=204 → 6.24V,  DAC=238 → 7.20V
+ * 线性回归得硬件传递: Vout = 29.8199 * DAC + 136.475
+ * 校准公式: DAC = (Vpp * 251 - 30000) / 7500
+ *
+ * @param vpp 峰峰值，单位为 mV (0 ~ 7500 mV)
+ * @return uint32_t 返回对应的 DAC 增益值 (0 ~ 247)
+ */
 uint32_t DDS_Vpp_to_DACGain(uint32_t vpp) {
-    uint32_t dac_value = (vpp * 255 + 4000) / 8000;
-    // if (dac_value > 4) dac_value -= 1;
-    if (dac_value > 255) dac_value = 255;
+    uint32_t dac_value;
+    if (vpp * 251 > 30000) {
+        dac_value = (vpp * 251 - 30000) / 7500;
+    } else {
+        dac_value = 0;
+    }
+    if (dac_value > 247) dac_value = 247;
     return dac_value;
 }
 
