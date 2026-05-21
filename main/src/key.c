@@ -21,7 +21,7 @@ extern volatile uint8_t slect_index;
 #define FREQ_ACCEL_THRESHOLD_MS 3000
 
 static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
-    uint32_t step_vpp = 100, step_freq = 1;
+    uint32_t step_vpp = 100, step_freq = 100;
     if (event == KEY_EVENT_LONG_PRESS_HOLD) {
         TickType_t duration = xTaskGetTickCount() - keys[key_id].press_start_tick;
         uint32_t duration_ms = (uint32_t)(duration * 1000 / configTICK_RATE_HZ);
@@ -30,10 +30,9 @@ static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
             uint32_t exp_full = excess_ms / 1000;
             uint32_t tenths   = (excess_ms % 1000) / 100;
             switch (exp_full) {
-                case 0: step_freq = 1;    break;
-                case 1: step_freq = 10;   break;
-                case 2: step_freq = 100;  break;
-                case 3: step_freq = 1000; break;
+                case 0: step_freq = 100;   break;
+                case 1: step_freq = 1000;  break;
+                case 2: step_freq = 10000; break;
                 default: step_freq = 10000; break;
             }
             if (tenths > 0) {
@@ -68,7 +67,7 @@ static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
 }
 
 static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
-    uint32_t step_vpp = 100, step_freq = 1;
+    uint32_t step_vpp = 100, step_freq = 100;
     if (event == KEY_EVENT_LONG_PRESS_HOLD) {
         TickType_t duration = xTaskGetTickCount() - keys[key_id].press_start_tick;
         uint32_t duration_ms = (uint32_t)(duration * 1000 / configTICK_RATE_HZ);
@@ -77,10 +76,9 @@ static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
             uint32_t exp_full = excess_ms / 1000;
             uint32_t tenths   = (excess_ms % 1000) / 100;
             switch (exp_full) {
-                case 0: step_freq = 1;    break;
-                case 1: step_freq = 10;   break;
-                case 2: step_freq = 100;  break;
-                case 3: step_freq = 1000; break;
+                case 0: step_freq = 100;   break;
+                case 1: step_freq = 1000;  break;
+                case 2: step_freq = 10000; break;
                 default: step_freq = 10000; break;
             }
             if (tenths > 0) {
