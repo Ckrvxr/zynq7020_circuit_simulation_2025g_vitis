@@ -8,6 +8,7 @@
 
 #include "bram.h"
 #include "dds.h"
+#include "kiss_fft.h"
 
 volatile uint32_t sweep_vpp  = 2000;
 volatile uint32_t sweep_freq = 50000;
@@ -23,6 +24,10 @@ volatile int16_t fir_r_data[1040];
 volatile uint32_t fir_ref_mag2[1040];
 volatile uint8_t  fir_calibrated = 0;
 volatile uint8_t  fir_is_calibrating = 0;
+
+int16_t fir_coeffs[FIR_TAPS];
+volatile uint8_t fir_coeffs_ready = 0;
+volatile uint8_t fir_learned = 0;
 
 volatile uint8_t fir_filter_type = FIR_TYPE_UNKNOWN;
 const char *fir_type_str[] = {
@@ -140,8 +145,41 @@ static void FIR_Sweep(void) {
     fir_progress = 1040;
 }
 
+void FIR_CalcCoeffs(void) {
+    static kiss_fft_cpx freq[FFT_N];
+    static kiss_fft_cpx time[FFT_N];
+
+    for (int k = 0; k < 1040; k++) {
+        freq[k].r = (float)fir_i_data[k];
+        freq[k].i = (float)fir_r_data[k];
+    }
+    for (int k = 1040; k < FFT_N - 1039; k++) {
+        freq[k].r = 0; freq[k].i = 0;
+    }
+    for (int k = 1; k < 1040; k++) {
+        freq[FFT_N - k].r =  freq[k].r;
+        freq[FFT_N - k].i = -freq[k].i;
+    }
+
+    kiss_fft_cfg cfg = kiss_fft_alloc(FFT_N, 1, NULL, NULL);
+    kiss_fft(cfg, freq, time);
+    kiss_fft_free(cfg);
+
+    float scale = 1.0f / FFT_N;
+    for (int n = 0; n < FIR_TAPS; n++) {
+        float win = 0.54f - 0.46f * cosf(2.0f * (float)M_PI * n / (FIR_TAPS - 1));
+        float v = time[n].r * scale * win;
+        if (v >  1.0f) v =  1.0f;
+        if (v < -1.0f) v = -1.0f;
+        fir_coeffs[n] = (int16_t)(v * 32767.0f);
+    }
+
+    fir_coeffs_ready = 1;
+}
+
 void FIR_Calibrate(void) {
     xil_printf("INFO[FIR]: Calibration started...\n\r");
+    fir_learned = 0;
     fir_is_calibrating = 1;
     FIR_Sweep();
     fir_calibrated = 1;
@@ -154,35 +192,28 @@ void FIR_Learn(void) {
     fir_is_calibrating = 0;
     FIR_Sweep();
     fir_filter_type = FIR_AnalyzeResponse();
+    fir_learned = 1;
     xil_printf("INFO[FIR]: Frequency sweep completed! Type: %s\n\r",
                fir_type_str[fir_filter_type]);
 }
 
 void FIR_Run(void) {
-    xil_printf("INFO[FIR]: Running FIR filter...\n\r");
-    uint32_t cmd;
+    if (fir_learned) {
+        xil_printf("INFO[FIR]: Calculating coefficients from learned data...\n\r");
+        FIR_CalcCoeffs();
 
-    // 停止当前 DDS 输出
-    DDS_Send_Command(0, 0);
+        for (int i = 0; i < 1040; i++) {
+            uint32_t word = ((uint16_t)fir_coeffs[i * 2 + 1] << 16) |
+                             (uint16_t)fir_coeffs[i * 2];
+            BRAM_Write(4 + i, word);
+        }
+    } else {
+        xil_printf("INFO[FIR]: No learned data, using PL default coefficients.\n\r");
+    }
 
-    // 设置 ADC 增益
-    uint32_t adc_gain = 0x00000800;
-    cmd = BRAM_Read(1);               // 读取当前增益寄存器值
-    cmd &= ~0x00000FFF;               // 清空原有的 ADC_GAIN (位 11:0)
-    cmd |= (adc_gain & 0x0FFF);       // 写入新的 ADC_GAIN 到对应位域
-    BRAM_Write(1, cmd);               // 回写增益寄存器
-
-    // 设置 DDS 增益
-    uint32_t dac_gain = 0x0000021C;
-    cmd = BRAM_Read(1);                 // 读取当前增益寄存器值
-    cmd &= ~(0x0FFF << 16);             // 清空原有的 DAC_GAIN (位 27:16)
-    cmd |= ((dac_gain & 0x0FFF) << 16); // 写入新的 DAC_GAIN 到对应位域
-    BRAM_Write(1, cmd);                 // 回写增益寄存器
-
-    // 切换通道到 FIR filter 通道
-    // cmd = BRAM_Read(3); // 读取当前状态寄存器 (地址 3)
-    // cmd |= (1 << 3);    // 设置 Bit 3 切换到 FIR filter 通道
-    // BRAM_Write(3, cmd); // 回写寄存器触发
+    uint32_t cmd = BRAM_Read(3);
+    cmd |= (1 << 3);
+    BRAM_Write(3, cmd);
 }
 
 void FIR_Cancel(void) {

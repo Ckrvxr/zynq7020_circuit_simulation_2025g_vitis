@@ -31,6 +31,16 @@ extern volatile uint8_t fir_filter_type;
 extern const char *fir_type_str[];
 extern const char *fir_type_abbr[];
 
+enum {
+    FIR_TAPS = 2080,
+    FFT_N    = 2048
+};
+
+extern int16_t fir_coeffs[FIR_TAPS];
+extern volatile uint8_t fir_coeffs_ready;
+extern volatile uint8_t fir_learned;
+
+void FIR_CalcCoeffs(void);
 void FIR_Calibrate(void);
 void FIR_Learn(void);
 void FIR_Run(void);
