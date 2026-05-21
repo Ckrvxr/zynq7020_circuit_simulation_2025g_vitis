@@ -200,14 +200,14 @@ static void Display_Draw_FIRModeLearningProgress(void) {
         u8g2_DrawBox(&u8g2, 12, 22, bar_w, 4);
     }
 
-    snprintf(buf, sizeof(buf), "%d / 1040", fir_progress);
-    u8g2_DrawStr(&u8g2, 30, 40, buf);
+    snprintf(buf, sizeof(buf), "Progress: %d/1040", fir_progress);
+    u8g2_DrawStr(&u8g2, 10, 40, buf);
 
     Format_With_Commas(fir_curr_freq, fmt);
     snprintf(buf, sizeof(buf), "Freq: %s Hz", fmt);
     u8g2_DrawStr(&u8g2, 10, 52, buf);
 
-    snprintf(buf, sizeof(buf), "I:%+5d  R:%+5d", fir_curr_i, fir_curr_r);
+    snprintf(buf, sizeof(buf), "I: %+5d  R: %+5d", fir_curr_i, fir_curr_r);
     u8g2_DrawStr(&u8g2, 10, 63, buf);
 }
 
