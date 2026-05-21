@@ -29,21 +29,25 @@ int16_t fir_coeffs[FIR_TAPS];
 volatile uint8_t fir_coeffs_ready = 0;
 volatile uint8_t fir_learned = 0;
 
-volatile uint8_t fir_filter_type = FIR_TYPE_UNKNOWN;
+volatile FIR_CircuitType_t fir_circuit_type = FIR_TYPE_OTHER;
 const char *fir_type_str[] = {
-    [FIR_TYPE_UNKNOWN]   = "Unknown",
+    [FIR_TYPE_OTHER]   = "Other",
     [FIR_TYPE_LOW_PASS]  = "Low-Pass",
     [FIR_TYPE_HIGH_PASS] = "High-Pass",
     [FIR_TYPE_BAND_PASS] = "Band-Pass",
     [FIR_TYPE_BAND_STOP] = "Band-Stop",
+    [FIR_TYPE_ALL_PASS]  = "All-Pass",
+    [FIR_TYPE_ALL_STOP]  = "All-Stop",
 };
 
 const char *fir_type_abbr[] = {
-    [FIR_TYPE_UNKNOWN]   = "UK",
+    [FIR_TYPE_OTHER]   = "OT",
     [FIR_TYPE_LOW_PASS]  = "LP",
     [FIR_TYPE_HIGH_PASS] = "HP",
     [FIR_TYPE_BAND_PASS] = "BP",
     [FIR_TYPE_BAND_STOP] = "BS",
+    [FIR_TYPE_ALL_PASS]  = "AP",
+    [FIR_TYPE_ALL_STOP]  = "AS",
 };
 
 static uint8_t FIR_AnalyzeResponse(void) {
@@ -53,7 +57,7 @@ static uint8_t FIR_AnalyzeResponse(void) {
                      (uint32_t)(fir_r_data[i] * fir_r_data[i]);
         if (m > max_mag2) max_mag2 = m;
     }
-    if (max_mag2 == 0) return FIR_TYPE_UNKNOWN;
+    if (max_mag2 == 0) return FIR_TYPE_OTHER;
 
     uint32_t threshold = max_mag2 * 45 / 100;
     int low_cnt = 0, mid_cnt = 0, high_cnt = 0;
@@ -75,7 +79,9 @@ static uint8_t FIR_AnalyzeResponse(void) {
     if (low_pct < 40 && high_pct > 60) return FIR_TYPE_HIGH_PASS;
     if (low_pct > 60 && high_pct > 60 && mid_pct < 40) return FIR_TYPE_BAND_STOP;
     if (low_pct < 40 && high_pct < 40 && mid_pct > 60) return FIR_TYPE_BAND_PASS;
-    return FIR_TYPE_UNKNOWN;
+    if (low_pct > 60 && mid_pct > 60 && high_pct > 60) return FIR_TYPE_ALL_PASS;
+    if (low_pct < 40 && mid_pct < 40 && high_pct < 40) return FIR_TYPE_ALL_STOP;
+    return FIR_TYPE_OTHER;
 }
 
 static void FIR_Sweep(void) {
@@ -191,10 +197,10 @@ void FIR_Learn(void) {
     xil_printf("INFO[FIR]: FIR Learning Started...\n\r");
     fir_is_calibrating = 0;
     FIR_Sweep();
-    fir_filter_type = FIR_AnalyzeResponse();
+    fir_circuit_type = FIR_AnalyzeResponse();
     fir_learned = 1;
     xil_printf("INFO[FIR]: Frequency sweep completed! Type: %s\n\r",
-               fir_type_str[fir_filter_type]);
+               fir_type_str[fir_circuit_type]);
 }
 
 void FIR_Run(void) {

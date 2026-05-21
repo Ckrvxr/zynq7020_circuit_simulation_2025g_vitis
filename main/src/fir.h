@@ -21,13 +21,17 @@ extern volatile uint32_t fir_ref_mag2[1040];
 extern volatile uint8_t  fir_calibrated;
 extern volatile uint8_t  fir_is_calibrating;
 
-#define FIR_TYPE_UNKNOWN    0
-#define FIR_TYPE_LOW_PASS   1
-#define FIR_TYPE_HIGH_PASS  2
-#define FIR_TYPE_BAND_PASS  3
-#define FIR_TYPE_BAND_STOP  4
+typedef enum {
+    FIR_TYPE_OTHER     = 0,
+    FIR_TYPE_LOW_PASS  = 1,
+    FIR_TYPE_HIGH_PASS = 2,
+    FIR_TYPE_BAND_PASS = 3,
+    FIR_TYPE_BAND_STOP = 4,
+    FIR_TYPE_ALL_PASS  = 5,
+    FIR_TYPE_ALL_STOP  = 6,
+} FIR_CircuitType_t;
 
-extern volatile uint8_t fir_filter_type;
+extern volatile FIR_CircuitType_t fir_circuit_type;
 extern const char *fir_type_str[];
 extern const char *fir_type_abbr[];
 
