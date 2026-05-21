@@ -180,8 +180,11 @@ static void Display_Draw_FIRMode(void) {
 
     u8g2_DrawStr(&u8g2, 15, 30, "Type: Band-Stop");
 
-    Display_Draw_Cursor(45, (menu_index == 1), (slect_index == 1));
-    u8g2_DrawStr(&u8g2, 15, 45, "Start Learning");
+    Display_Draw_Cursor(43, (menu_index == 1), (slect_index == 1));
+    u8g2_DrawStr(&u8g2, 18, 43, "1. Calibrate");
+
+    Display_Draw_Cursor(58, (menu_index == 2), (slect_index == 2));
+    u8g2_DrawStr(&u8g2, 18, 58, "2. Start Learning");
 }
 
 static void Display_Draw_FIRModeLearningProgress(void) {
@@ -189,7 +192,7 @@ static void Display_Draw_FIRModeLearningProgress(void) {
     char fmt[32];
 
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    u8g2_DrawStr(&u8g2, 0, 10, "[Learning...]");
+    u8g2_DrawStr(&u8g2, 0, 10, fir_is_calibrating ? "[Calibrating...]" : "[Learning...]");
     Display_Draw_LiveAnimation(120, 5);
     u8g2_DrawHLine(&u8g2, 0, 14, 128);
 
@@ -240,22 +243,36 @@ static void Display_Draw_FIRCurveView(void) {
 
     // 预计算 1040 个频点的 dB 值
     float fir_dB[1040];
-    float sum_dB = 0.0f;
-    for (int i = 0; i < 1040; i++) {
-        uint32_t mag2 = (uint32_t)(fir_i_data[i] * fir_i_data[i]) +
-                        (uint32_t)(fir_r_data[i] * fir_r_data[i]);
-        if (mag2 < 1) mag2 = 1;
-        fir_dB[i] = 10.0f * log10f((float)mag2);
-        sum_dB += fir_dB[i];
-    }
-
-    // 中心化：相对均值
-    float mean_dB = sum_dB / 1040.0f;
     float min_dB = 100.0f, max_dB = -100.0f;
-    for (int i = 0; i < 1040; i++) {
-        fir_dB[i] -= mean_dB;
-        if (fir_dB[i] < min_dB) min_dB = fir_dB[i];
-        if (fir_dB[i] > max_dB) max_dB = fir_dB[i];
+
+    if (fir_calibrated) {
+        // 以校准数据为基准：gain = 10·log₁₀(mag² / ref²)
+        for (int i = 0; i < 1040; i++) {
+            uint32_t mag2 = (uint32_t)(fir_i_data[i] * fir_i_data[i]) +
+                            (uint32_t)(fir_r_data[i] * fir_r_data[i]);
+            if (mag2 < 1) mag2 = 1;
+            uint32_t ref = fir_ref_mag2[i];
+            if (ref < 1) ref = 1;
+            fir_dB[i] = 10.0f * log10f((float)mag2) - 10.0f * log10f((float)ref);
+            if (fir_dB[i] < min_dB) min_dB = fir_dB[i];
+            if (fir_dB[i] > max_dB) max_dB = fir_dB[i];
+        }
+    } else {
+        // 无校准时中心化
+        float sum_dB = 0.0f;
+        for (int i = 0; i < 1040; i++) {
+            uint32_t mag2 = (uint32_t)(fir_i_data[i] * fir_i_data[i]) +
+                            (uint32_t)(fir_r_data[i] * fir_r_data[i]);
+            if (mag2 < 1) mag2 = 1;
+            fir_dB[i] = 10.0f * log10f((float)mag2);
+            sum_dB += fir_dB[i];
+        }
+        float mean_dB = sum_dB / 1040.0f;
+        for (int i = 0; i < 1040; i++) {
+            fir_dB[i] -= mean_dB;
+            if (fir_dB[i] < min_dB) min_dB = fir_dB[i];
+            if (fir_dB[i] > max_dB) max_dB = fir_dB[i];
+        }
     }
 
     float range_dB = max_dB - min_dB;
@@ -304,7 +321,7 @@ static void Display_Draw_FIRCurveView(void) {
 
     // X 轴标签
     u8g2_DrawStr(&u8g2, AX_LEFT, 62, "50Hz");
-    u8g2_DrawStr(&u8g2, AX_RIGHT - 30, 62, "60kHz");
+    u8g2_DrawStr(&u8g2, AX_RIGHT - 30, 62, "500kHz");
 }
 
 void Display_Refresh(void) {
@@ -314,6 +331,7 @@ void Display_Refresh(void) {
         case STATE_DDS_MODE_MENU:           Display_Draw_DDSMode();  break;
         case STATE_FIR_MODE_MENU:           Display_Draw_FIRMode();  break;
         case STATE_FIR_MODE_LEARNING:       Display_Draw_FIRModeLearningProgress(); break;
+        case STATE_FIR_CALIBRATING:         Display_Draw_FIRModeLearningProgress(); break;
         case STATE_FIR_MODE_LEARN_COMPLETE: Display_Draw_FIRModeLearnComplete();    break;
         case STATE_FIR_CURVE_VIEW:          Display_Draw_FIRCurveView();            break;
     }
