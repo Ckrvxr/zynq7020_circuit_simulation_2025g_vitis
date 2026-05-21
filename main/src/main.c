@@ -38,9 +38,9 @@ int main(void) {
     BRAM_Init();
 
     xil_printf("INFO[RTOS]: Create FreeRTOS Tasks...\r\n");
-    xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
+    xTaskCreate(vDisplayTask, "Display", 4096, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
     xil_printf("INFO[RTOS]: Display Task Created.\r\n");
-    xTaskCreate(vTaskKeyPolling, "Key", 2048, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
+    xTaskCreate(vTaskKeyPolling, "Key", 4096, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
     xil_printf("INFO[RTOS]: Key Task Created.\r\n");
     xTaskCreate(vMainTask, "Main", 2048, NULL, tskIDLE_PRIORITY + 1, &xMainTaskHandle);
     xil_printf("INFO[RTOS]: Main Task Created.\r\n");
