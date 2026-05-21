@@ -134,7 +134,7 @@ static void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
             }
         }
         else if(currentState == STATE_FIR_MODE_MENU) {
-            if(slect_index == 0) {
+            if     (slect_index == 0) {
                 slect_index = menu_index;
             }
             else if(slect_index == 1) {
