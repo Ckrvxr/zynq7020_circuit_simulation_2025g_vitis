@@ -33,5 +33,5 @@ extern const char *fir_type_abbr[];
 
 void FIR_Calibrate(void);
 void FIR_Learn(void);
-void FIR_Exec(void);
+void FIR_Run(void);
 void FIR_Cancel(void);

@@ -158,9 +158,39 @@ void FIR_Learn(void) {
                fir_type_str[fir_filter_type]);
 }
 
-void FIR_Exec(void) {
+void FIR_Run(void) {
+    xil_printf("INFO[FIR]: Running FIR filter...\n\r");
+    uint32_t cmd;
+
+    // 停止当前 DDS 输出
+    DDS_Send_Command(0, 0);
+
+    // 设置 ADC 增益
+    uint32_t adc_gain = 0x00000800;
+    cmd = BRAM_Read(1);               // 读取当前增益寄存器值
+    cmd &= ~0x00000FFF;               // 清空原有的 ADC_GAIN (位 11:0)
+    cmd |= (adc_gain & 0x0FFF);       // 写入新的 ADC_GAIN 到对应位域
+    BRAM_Write(1, cmd);               // 回写增益寄存器
+
+    // 设置 DDS 增益
+    uint32_t dac_gain = 0x0000021C;
+    cmd = BRAM_Read(1);                 // 读取当前增益寄存器值
+    cmd &= ~(0x0FFF << 16);             // 清空原有的 DAC_GAIN (位 27:16)
+    cmd |= ((dac_gain & 0x0FFF) << 16); // 写入新的 DAC_GAIN 到对应位域
+    BRAM_Write(1, cmd);                 // 回写增益寄存器
+
+    // 切换通道到 FIR filter 通道
+    // cmd = BRAM_Read(3); // 读取当前状态寄存器 (地址 3)
+    // cmd |= (1 << 3);    // 设置 Bit 3 切换到 FIR filter 通道
+    // BRAM_Write(3, cmd); // 回写寄存器触发
 }
 
 void FIR_Cancel(void) {
-    // TODO: Cancel / interrupt FIR learning
+    // xil_printf("INFO[FIR]: FIR operation cancelled. Returning to menu...\n\r");
+    // // 停止当前 DDS 输出
+    // DDS_Send_Command(0, 0);
+    // // 切换通道回主输出通道
+    // uint32_t cmd = BRAM_Read(3);
+    // cmd &= ~(1 << 3); // 清除 Bit 3 切换回主输出通道
+    // BRAM_Write(3, cmd);
 }

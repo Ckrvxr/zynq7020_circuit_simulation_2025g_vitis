@@ -325,6 +325,14 @@ static void Display_Draw_FIRCurveView(void) {
     u8g2_DrawStr(&u8g2, AX_RIGHT - 30, 62, "500kHz");
 }
 
+static void Display_Draw_FIRRunning(void) {
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
+    u8g2_DrawStr(&u8g2, 0, 10, "[FIR Running]");
+    Display_Draw_LiveAnimation(120, 5);
+    u8g2_DrawHLine(&u8g2, 0, 14, 128);
+    u8g2_DrawStr(&u8g2, 25, 40, "Press Back");
+}
+
 void Display_Refresh(void) {
     u8g2_ClearBuffer(&u8g2);
     switch (currentState) {
@@ -332,6 +340,7 @@ void Display_Refresh(void) {
         case STATE_DDS_MODE_MENU:           Display_Draw_DDSMode();  break;
         case STATE_FIR_MODE_MENU:           Display_Draw_FIRMode();  break;
         case STATE_FIR_MODE_LEARNING:       Display_Draw_FIRModeLearningProgress(); break;
+        case STATE_FIR_RUNNING:             Display_Draw_FIRRunning();              break;
         case STATE_FIR_CALIBRATING:         Display_Draw_FIRModeLearningProgress(); break;
         case STATE_FIR_MODE_LEARN_COMPLETE: Display_Draw_FIRModeLearnComplete();    break;
         case STATE_FIR_CURVE_VIEW:          Display_Draw_FIRCurveView();            break;
