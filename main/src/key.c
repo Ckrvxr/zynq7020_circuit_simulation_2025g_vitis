@@ -1,4 +1,13 @@
 #include "key.h"
+
+#include "xgpiops.h"
+#include "xparameters.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include "dds.h"
+#include "display.h"
 #include "fir.h"
 
 static Key_Handle_t keys[KEY_COUNT];
@@ -9,10 +18,10 @@ extern volatile DisplayState_t currentState;
 extern volatile uint8_t menu_index;
 extern volatile uint8_t slect_index;
 
-#define ACCEL_LEVEL_1_MS    1400
-#define ACCEL_LEVEL_2_MS    2400
-#define ACCEL_LEVEL_3_MS    3400
-#define ACCEL_LEVEL_4_MS    4400
+#define ACCEL_LEVEL_1_MS 1400
+#define ACCEL_LEVEL_2_MS 2400
+#define ACCEL_LEVEL_3_MS 3400
+#define ACCEL_LEVEL_4_MS 4400
 
 static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
     uint32_t step_vpp = 1, step_freq = 1;

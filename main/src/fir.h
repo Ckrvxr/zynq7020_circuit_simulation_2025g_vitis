@@ -1,7 +1,7 @@
 #pragma once
 
-#include "xil_types.h"
 #include "xil_printf.h"
+#include "xil_types.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

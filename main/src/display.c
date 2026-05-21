@@ -1,5 +1,17 @@
 #include "display.h"
 
+#include "xil_types.h"
+#include "xiicps.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include <stdio.h>
+#include <math.h>
+
+#include "u8g2.h"
+
+#include "dds.h"
 /* -------------------------------------------------------- Driver -------------------------------------------------------- */
 static XIicPs IicInstance;
 static u8g2_t u8g2;

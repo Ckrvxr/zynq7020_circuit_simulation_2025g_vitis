@@ -1,13 +1,14 @@
 #pragma once
 
-#include "xparameters.h"
 #include "xgpiops.h"
+#include "xparameters.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "display.h"
 #include "dds.h"
+#include "display.h"
+#include "fir.h"
 
 typedef enum {
     KEY_EVENT_NONE = 0,
@@ -16,10 +17,10 @@ typedef enum {
 } Key_Event_Type_t;
 
 typedef enum {
-    KEY_ID_UP = 0,
-    KEY_ID_DOWN = 1,
+    KEY_ID_UP      = 0,
+    KEY_ID_DOWN    = 1,
     KEY_ID_CONFIRM = 2,
-    KEY_ID_CANCEL = 3,
+    KEY_ID_CANCEL  = 3,
     KEY_COUNT
 } Key_ID_t;
 
@@ -27,7 +28,7 @@ typedef struct {
     uint8_t id;
     uint8_t gpio_pin;
     XGpioPs *gpio_instance;
-    
+
     Key_Event_Type_t last_event;
     TickType_t press_start_tick;
     TickType_t last_trigger_tick;
@@ -37,7 +38,7 @@ typedef struct {
 
 #define KEY_DEBOUNCE_MS          50
 #define KEY_LONG_PRESS_MS        800
-#define KEY_LONG_PRESS_REPEAT_MS 200 
+#define KEY_LONG_PRESS_REPEAT_MS 200
 
 void Key_Init(void);
 void Key_Task(void *pvParameters);

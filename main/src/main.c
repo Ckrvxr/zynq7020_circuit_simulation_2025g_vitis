@@ -1,13 +1,13 @@
-#include "FreeRTOS.h"
-#include "task.h"
-
 #include "xil_printf.h"
 #include "xil_types.h"
 #include "xparameters.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include "bram.h"
 #include "display.h"
 #include "key.h"
-#include "bram.h"
 
 TaskHandle_t xDisplayTaskHandle;
 TaskHandle_t xTaskKeyPollingHandle;
@@ -15,7 +15,7 @@ TaskHandle_t xTaskKeyPollingHandle;
 static void vDisplayTask(void *pvParameters) {
     Display_Init();
 
-    for( ;; ) {
+    for (;;) {
         Display_Refresh();
         vTaskDelay(pdMS_TO_TICKS(20));
     }
@@ -26,19 +26,16 @@ void vTaskKeyPolling(void *pvParameters) {
     Key_Task(NULL);
 }
 
-
-int main( void )
-{
+int main(void) {
     BRAM_Init();
 
     xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
     xTaskCreate(vTaskKeyPolling, "Key", 2048, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
-    
+
     xil_printf("System Starting...\r\n");
-    
+
     vTaskStartScheduler();
 
-
-
-    for( ;; );
+    for (;;) {
+    }
 }
