@@ -10,7 +10,7 @@
 #include "dds.h"
 
 volatile uint32_t sweep_vpp  = 3300;
-volatile uint32_t sweep_freq = 1000;
+volatile uint32_t sweep_freq = 50000;
 
 void FIR_Learn(void) {
     xil_printf("INFO[FIR]: FIR Learning Started...\n\r");
@@ -26,7 +26,7 @@ void FIR_Learn(void) {
     BRAM_Write(1, cmd);
 
     // 2. 设置延时参数
-    uint32_t delay_cycles = 200;
+    uint32_t delay_cycles = 58;
     cmd                   = BRAM_Read(3);
     cmd &= ~(0xFFFF << 7);                 // 清空原有的 DELAY_VAL (位 22:7)
     cmd |= ((delay_cycles & 0xFFFF) << 7); // 写入新的延时值到位域 [22:7]
@@ -73,9 +73,9 @@ void FIR_Learn(void) {
         } while ((cmd & (1 << 4)) != 0);
         vTaskDelay(pdMS_TO_TICKS(100));
         ir_result = BRAM_Read(2);
-        xil_printf("INFO[FIR]: Sweep Result I= 0x%04X R= 0x%04X\n\r",
-                   (ir_result >> 16) & 0xFFFF, // 右移 16 位提取高 16 位的 I
-                   ir_result & 0xFFFF);        // 掩码提取低 16 位的 R
+        xil_printf("INFO[FIR]: Sweep Result I= %u R= %u\n\r",
+                   (ir_result >> 16) & 0xFFFF,
+                   ir_result & 0xFFFF);
     }
 }
 
