@@ -45,10 +45,11 @@ void FIR_Learn(void) {
     cmd |= ((dac_gain & 0x0FFF) << 16); // 写入新的 DAC_GAIN 到对应位域
     BRAM_Write(1, cmd);                 // 回写增益寄存器
 
-    xil_printf("INFO[FIR]: Frequency sweep 100Hz to 50000Hz with 100Hz step...\n\r");
+    xil_printf("INFO[FIR]: Frequency sweep started...\n\r");
     
-    // 扫频：从 100Hz 扫到 50000Hz，步进 100Hz
-    for (uint32_t freq = 100; freq <= 50000; freq += 100) {
+    // 扫频：50Hz ~ 60kHz，1040 个线性间隔频点
+    for (int i = 0; i < 1040; i++) {
+        uint32_t freq = 50 + (uint32_t)((uint64_t)i * 59950 / 1039);
         uint32_t ftw = DDS_Freq_to_FTW(freq, 50000000);
         cmd = ftw;
         BRAM_Write(0, cmd);
