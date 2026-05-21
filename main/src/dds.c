@@ -5,7 +5,7 @@
 #include "bram.h"
 
 volatile uint32_t dds_vpp  = 1000;  // 0 ~ 8,000 -> 0 ~ 8 V
-volatile uint32_t dds_freq = 100;  // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
+volatile uint32_t dds_freq = 50000;  // 0 ~ 1,000,000 -> 0 ~ 1 Mhz
 static uint32_t dds_vpp_bak;
 static uint32_t dds_freq_bak;
 

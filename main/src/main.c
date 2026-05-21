@@ -28,7 +28,7 @@ static void vTaskKeyPolling(void *pvParameters) {
 }
 
 static void vMainTask(void *pvParameters) {
-    xil_printf("INFO[MainTask]: Main Task running.\r\n");
+    xil_printf("INFO[RTOS]: Main Task running.\r\n");
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
