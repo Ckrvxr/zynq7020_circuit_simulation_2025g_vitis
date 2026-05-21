@@ -9,29 +9,32 @@ static XBram Bram;
 static uint8_t Initialized = 0;
 
 void BRAM_Init(void) {
-    if (Initialized == 1)
+    if (Initialized == 1) {
         return;
+    }
+
+    xil_printf("INFO[BRAM]: Initializing BRAM...\r\n");
 
     XBram_Config *ConfigPtr = XBram_LookupConfig(XPAR_BRAM_0_DEVICE_ID);
     if (ConfigPtr == NULL) {
-        xil_printf("ERROR[BRAM]: BRAMDevice not found\r\n");
+        xil_printf("ERROR[BRAM]: BRAMDevice not found.\r\n");
         return;
     }
 
     uint8_t Status = XBram_CfgInitialize(&Bram, ConfigPtr, ConfigPtr->CtrlBaseAddress);
     if (Status != XST_SUCCESS) {
-        xil_printf("ERROR[BRAM]: BRAM Init failed (%d)\r\n", Status);
+        xil_printf("ERROR[BRAM]: BRAM Init failed. (%d)\r\n", Status);
         return;
     }
 
     Status = XBram_SelfTest(&Bram, 0);
     if (Status != XST_SUCCESS) {
-        xil_printf("ERROR[BRAM]: SelfTest failed (%d)\r\n", Status);
+        xil_printf("ERROR[BRAM]: SelfTest failed. (%d)\r\n", Status);
         return;
     }
 
     Initialized = 1;
-    xil_printf("INFO[BRAM]: BRAM Initialize: OK\r\n");
+    xil_printf("INFO[BRAM]: BRAM Initialize Success.\r\n");
 }
 
 void BRAM_Write(uint32_t addr, uint32_t data_tx) {

@@ -11,6 +11,7 @@
 
 TaskHandle_t xDisplayTaskHandle;
 TaskHandle_t xTaskKeyPollingHandle;
+TaskHandle_t xMainTaskHandle;
 
 static void vDisplayTask(void *pvParameters) {
     Display_Init();
@@ -21,19 +22,30 @@ static void vDisplayTask(void *pvParameters) {
     }
 }
 
-void vTaskKeyPolling(void *pvParameters) {
+static void vTaskKeyPolling(void *pvParameters) {
     Key_Init();
     Key_Task(NULL);
+}
+
+static void vMainTask(void *pvParameters) {
+    xil_printf("INFO[MainTask]: Main Task running.\r\n");
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
 }
 
 int main(void) {
     BRAM_Init();
 
+    xil_printf("INFO[RTOS]: Create FreeRTOS Tasks...\r\n");
     xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
+    xil_printf("INFO[RTOS]: Display Task Created.\r\n");
     xTaskCreate(vTaskKeyPolling, "Key", 2048, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
+    xil_printf("INFO[RTOS]: Key Task Created.\r\n");
+    xTaskCreate(vMainTask, "Main", 2048, NULL, tskIDLE_PRIORITY + 1, &xMainTaskHandle);
+    xil_printf("INFO[RTOS]: Main Task Created.\r\n");
 
-    xil_printf("System Starting...\r\n");
-
+    xil_printf("INFO[RTOS]: Start FreeRTOS Scheduler...\r\n");
     vTaskStartScheduler();
 
     for (;;) {
