@@ -26,7 +26,7 @@ void DDS_Vpp_Cancel(void) {
     dds_vpp = dds_vpp_bak; 
 }
 void DDS_Vpp_Exec(void) {
-    DDS_Send_Command();
+    DDS_Send_Command(dds_vpp, dds_freq);
 }
 
 void DDS_Freq_Config(void) {
@@ -46,7 +46,7 @@ void DDS_Freq_Cancel(void) {
      dds_freq = dds_freq_bak; 
 }
 void DDS_Freq_Exec(void) {
-    DDS_Send_Command(); 
+    DDS_Send_Command(dds_vpp, dds_freq);
 }
 
 /**
@@ -92,15 +92,15 @@ uint32_t DDS_Vpp_to_DACGain(uint32_t vpp) {
     return dac_value;
 }
 
-void DDS_Send_Command() {
+void DDS_Send_Command(uint32_t vpp, uint32_t freq) {
     uint32_t cmd = 0;
 
     // Set DDS Frequency
-    uint32_t ftw = DDS_Freq_to_FTW((uint32_t)dds_freq, 50000000);
+    uint32_t ftw = DDS_Freq_to_FTW(freq, 50000000);
     cmd = ftw;
     BRAM_Write(0, cmd);
     // Set DDS Vpp
-    uint32_t dac_gain = DDS_Vpp_to_DACGain((uint32_t)dds_vpp);
+    uint32_t dac_gain = DDS_Vpp_to_DACGain(vpp);
     cmd = BRAM_Read(1) ;
     cmd &= ~(0x0FFF << 16);             // 清空原有的 DAC_GAIN (位 27:16)
     cmd |= ((dac_gain & 0x0FFF) << 16); // 写入新的 DAC_GAIN 到对应位域
