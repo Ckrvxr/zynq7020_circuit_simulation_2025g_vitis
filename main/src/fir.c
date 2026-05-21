@@ -20,30 +20,30 @@ void FIR_Learn(void) {
 
     // 设置 ADC 增益
     uint32_t adc_gain = 0x00000800;
-    cmd = BRAM_Read(1);
+    cmd = BRAM_Read(1);         // 读取当前增益寄存器值
     cmd &= ~0x00000FFF;         // 清空原有的 ADC_GAIN (位 11:0)
     cmd |= (adc_gain & 0x0FFF); // 写入新的 ADC_GAIN 到对应位域
-    BRAM_Write(1, cmd);
+    BRAM_Write(1, cmd);         // 回写增益寄存器
 
     // 设置延时参数
-    uint32_t delay_cycles = 58;
-    cmd = BRAM_Read(3);
-    cmd &= ~(0xFFFF << 7);                 // 清空原有的 DELAY_VAL (位 22:7)
-    cmd |= ((delay_cycles & 0xFFFF) << 7); // 写入新的延时值到位域 [22:7]
-    cmd |= (1 << 5);                       // 拉高 DELAY_TRIG 触发延时参数配置
-    BRAM_Write(3, cmd);
-    do {
-        vTaskDelay(pdMS_TO_TICKS(1));
-        cmd = BRAM_Read(3);
-    } while ((cmd & (1 << 5)) != 0);
-    vTaskDelay(pdMS_TO_TICKS(100));
+    // uint32_t delay_cycles = 58;
+    // cmd = BRAM_Read(3);
+    // cmd &= ~(0xFFFF << 7);                 // 清空原有的 DELAY_VAL (位 22:7)
+    // cmd |= ((delay_cycles & 0xFFFF) << 7); // 写入新的延时值到位域 [22:7]
+    // cmd |= (1 << 5);                       // 拉高 DELAY_TRIG 触发延时参数配置
+    // BRAM_Write(3, cmd);
+    // do {
+    //     vTaskDelay(pdMS_TO_TICKS(1));
+    //     cmd = BRAM_Read(3);
+    // } while ((cmd & (1 << 5)) != 0);
+    // vTaskDelay(pdMS_TO_TICKS(100));
 
     // 设置 DDS 增益
     uint32_t dac_gain = DDS_Vpp_to_DACGain((uint32_t)sweep_vpp);
-    cmd = BRAM_Read(1);
+    cmd = BRAM_Read(1);                 // 读取当前增益寄存器值
     cmd &= ~(0x0FFF << 16);             // 清空原有的 DAC_GAIN (位 27:16)
     cmd |= ((dac_gain & 0x0FFF) << 16); // 写入新的 DAC_GAIN 到对应位域
-    BRAM_Write(1, cmd);                 // 写入 ADDR_GAIN (地址 1)
+    BRAM_Write(1, cmd);                 // 回写增益寄存器
 
     xil_printf("INFO[FIR]: Frequency sweep 100Hz to 50000Hz with 100Hz step...\n\r");
     
@@ -73,12 +73,12 @@ void FIR_Learn(void) {
             vTaskDelay(pdMS_TO_TICKS(1));
             cmd = BRAM_Read(3);
         } while ((cmd & (1 << 4)) != 0);
-        vTaskDelay(pdMS_TO_TICKS(20));
+        vTaskDelay(pdMS_TO_TICKS(10));
         ir_result = BRAM_Read(2);
-        xil_printf("INFO[FIR]: Freq= %u Hz, I= %u R= %u\n\r",
+        xil_printf("INFO[FIR]: Freq= %u Hz, I= %d R= %d\n\r",
                    freq,
-                   (ir_result >> 16) & 0xFFFF,
-                   ir_result & 0xFFFF);
+                   (s16)((ir_result >> 16) & 0xFFFF),
+                   (s16)(ir_result & 0xFFFF));
     }
     
     xil_printf("INFO[FIR]: Frequency sweep completed!\n\r");
