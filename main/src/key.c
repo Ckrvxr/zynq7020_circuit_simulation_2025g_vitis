@@ -18,7 +18,9 @@ extern volatile DisplayState_t currentState;
 extern volatile uint8_t menu_index;
 extern volatile uint8_t slect_index;
 
-#define FREQ_ACCEL_THRESHOLD_MS 3000
+enum {
+    FREQ_ACCEL_THRESHOLD_MS = 3000,
+};
 
 static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
     uint32_t step_vpp = 100, step_freq = 100;

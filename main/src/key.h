@@ -36,9 +36,11 @@ typedef struct {
     uint8_t long_press_triggered;
 } Key_Handle_t;
 
-#define KEY_DEBOUNCE_MS          50
-#define KEY_LONG_PRESS_MS        800
-#define KEY_LONG_PRESS_REPEAT_MS 200
+enum {
+    KEY_DEBOUNCE_MS          = 50,
+    KEY_LONG_PRESS_MS        = 800,
+    KEY_LONG_PRESS_REPEAT_MS = 200,
+};
 
 void Key_Init(void);
 void Key_Task(void *pvParameters);

@@ -29,20 +29,15 @@ typedef enum {
     FIR_TYPE_BAND_STOP = 4,
     FIR_TYPE_ALL_PASS  = 5,
     FIR_TYPE_ALL_STOP  = 6,
-} FIR_CircuitType_t;
+} FIR_CircuitType_e;
 
-extern volatile FIR_CircuitType_t fir_circuit_type;
-extern const char *fir_type_str[];
+extern volatile FIR_CircuitType_e fir_circuit_type;
 extern const char *fir_type_abbr[];
 
 enum {
     FIR_TAPS = 2080,
-    FFT_N    = 2048
+    FFT_N    = 4096
 };
-
-extern int16_t fir_coeffs[FIR_TAPS];
-extern volatile uint8_t fir_coeffs_ready;
-extern volatile uint8_t fir_learned;
 
 void FIR_Calibrate(void);
 void FIR_Learn(void);

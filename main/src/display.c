@@ -77,7 +77,7 @@ void Display_Init(void) {
 volatile DisplayState_t currentState = STATE_MAIN_MENU;
 volatile uint8_t menu_index = 1;
 volatile uint8_t slect_index = 0;
-uint32_t frame_count = 0;
+static uint32_t frame_count = 0;
 
 static void Format_With_Commas(uint32_t n, char *out_buf) {
     char temp[32];
@@ -146,8 +146,6 @@ static void Display_Draw_MainMenu(void) {
 }
 
 static void Display_Draw_DDSMode(void) {
-    extern volatile uint32_t dds_vpp;
-    extern volatile uint32_t dds_freq;
     char buf[64];
     char formatted_val[32];
 

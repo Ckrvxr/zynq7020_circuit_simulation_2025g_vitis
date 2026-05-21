@@ -10,8 +10,8 @@
 #include "dds.h"
 #include "kiss_fft.h"
 
-volatile uint32_t sweep_vpp  = 2000;
-volatile uint32_t sweep_freq = 50000;
+static volatile uint32_t sweep_vpp  = 2000;
+static volatile uint32_t sweep_freq = 50000;
 
 volatile int fir_progress  = 0;
 volatile uint32_t fir_curr_freq = 0;
@@ -25,12 +25,12 @@ volatile uint32_t fir_ref_mag2[1040];
 volatile uint8_t  fir_calibrated = 0;
 volatile uint8_t  fir_is_calibrating = 0;
 
-int16_t fir_coeffs[FIR_TAPS];
-volatile uint8_t fir_coeffs_ready = 0;
-volatile uint8_t fir_learned = 0;
+static int16_t fir_coeffs[FIR_TAPS];
+static volatile uint8_t fir_coeffs_ready = 0;
+static volatile uint8_t fir_learned = 0;
 
-volatile FIR_CircuitType_t fir_circuit_type = FIR_TYPE_OTHER;
-const char *fir_type_str[] = {
+volatile FIR_CircuitType_e fir_circuit_type = FIR_TYPE_OTHER;
+static const char *fir_type_str[] = {
     [FIR_TYPE_OTHER]   = "Other",
     [FIR_TYPE_LOW_PASS]  = "Low-Pass",
     [FIR_TYPE_HIGH_PASS] = "High-Pass",
@@ -50,7 +50,7 @@ const char *fir_type_abbr[] = {
     [FIR_TYPE_ALL_STOP]  = "AS",
 };
 
-static uint8_t FIR_AnalyzeResponse(void) {
+static FIR_CircuitType_e FIR_AnalyzeResponse(void) {
     int low_cnt = 0, mid_cnt = 0, high_cnt = 0;
 
     if (fir_calibrated) {
