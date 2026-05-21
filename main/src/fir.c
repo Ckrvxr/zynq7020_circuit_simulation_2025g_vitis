@@ -51,24 +51,37 @@ const char *fir_type_abbr[] = {
 };
 
 static uint8_t FIR_AnalyzeResponse(void) {
-    uint32_t max_mag2 = 0;
-    for (int i = 0; i < 1040; i++) {
-        uint32_t m = (uint32_t)(fir_i_data[i] * fir_i_data[i]) +
-                     (uint32_t)(fir_r_data[i] * fir_r_data[i]);
-        if (m > max_mag2) max_mag2 = m;
-    }
-    if (max_mag2 == 0) return FIR_TYPE_OTHER;
-
-    uint32_t threshold = max_mag2 * 45 / 100;
     int low_cnt = 0, mid_cnt = 0, high_cnt = 0;
 
-    for (int i = 0; i < 1040; i++) {
-        uint32_t m = (uint32_t)(fir_i_data[i] * fir_i_data[i]) +
-                     (uint32_t)(fir_r_data[i] * fir_r_data[i]);
-        uint8_t above = (m >= threshold) ? 1 : 0;
-        if      (i < 347) low_cnt  += above;
-        else if (i < 694) mid_cnt  += above;
-        else              high_cnt += above;
+    if (fir_calibrated) {
+        for (int i = 0; i < 1040; i++) {
+            uint32_t mag2 = (uint32_t)(fir_i_data[i] * fir_i_data[i]) +
+                            (uint32_t)(fir_r_data[i] * fir_r_data[i]);
+            uint32_t ref = fir_ref_mag2[i];
+            if (ref < 1) ref = 1;
+            uint8_t above = (mag2 * 100 / ref >= 50) ? 1 : 0;
+            if      (i < 347) low_cnt  += above;
+            else if (i < 694) mid_cnt  += above;
+            else              high_cnt += above;
+        }
+    } else {
+        uint32_t max_mag2 = 0;
+        for (int i = 0; i < 1040; i++) {
+            uint32_t m = (uint32_t)(fir_i_data[i] * fir_i_data[i]) +
+                         (uint32_t)(fir_r_data[i] * fir_r_data[i]);
+            if (m > max_mag2) max_mag2 = m;
+        }
+        if (max_mag2 == 0) return FIR_TYPE_OTHER;
+
+        uint32_t threshold = max_mag2 * 45 / 100;
+        for (int i = 0; i < 1040; i++) {
+            uint32_t m = (uint32_t)(fir_i_data[i] * fir_i_data[i]) +
+                         (uint32_t)(fir_r_data[i] * fir_r_data[i]);
+            uint8_t above = (m >= threshold) ? 1 : 0;
+            if      (i < 347) low_cnt  += above;
+            else if (i < 694) mid_cnt  += above;
+            else              high_cnt += above;
+        }
     }
 
     int low_pct  = low_cnt  * 100 / 347;
@@ -151,7 +164,7 @@ static void FIR_Sweep(void) {
     fir_progress = 1040;
 }
 
-void FIR_CalcCoeffs(void) {
+static void FIR_CalcCoeffs(void) {
     static kiss_fft_cpx freq[FFT_N];
     static kiss_fft_cpx time[FFT_N];
 
@@ -222,12 +235,4 @@ void FIR_Run(void) {
     BRAM_Write(3, cmd);
 }
 
-void FIR_Cancel(void) {
-    // xil_printf("INFO[FIR]: FIR operation cancelled. Returning to menu...\n\r");
-    // // 停止当前 DDS 输出
-    // DDS_Send_Command(0, 0);
-    // // 切换通道回主输出通道
-    // uint32_t cmd = BRAM_Read(3);
-    // cmd &= ~(1 << 3); // 清除 Bit 3 切换回主输出通道
-    // BRAM_Write(3, cmd);
-}
+

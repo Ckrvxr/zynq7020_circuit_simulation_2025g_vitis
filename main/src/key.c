@@ -211,12 +211,10 @@ static void Key_Handler_Cancel(uint8_t key_id, Key_Event_Type_t event) {
             currentState = STATE_FIR_MODE_MENU; menu_index = 1; slect_index = 0;
         }
         else if(currentState == STATE_FIR_CALIBRATING) {
-            currentState = STATE_FIR_MODE_MENU; menu_index = 1; slect_index = 0;
+            return;
         }
         else if(currentState == STATE_FIR_MODE_LEARNING) {
-            FIR_Cancel();
-            currentState = STATE_FIR_MODE_MENU;
-            slect_index = 0;
+            return;
         }
         else if(currentState == STATE_FIR_MODE_LEARN_COMPLETE) {
             currentState = STATE_FIR_MODE_MENU; menu_index = 1; slect_index = 0;

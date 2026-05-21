@@ -44,8 +44,7 @@ extern int16_t fir_coeffs[FIR_TAPS];
 extern volatile uint8_t fir_coeffs_ready;
 extern volatile uint8_t fir_learned;
 
-void FIR_CalcCoeffs(void);
 void FIR_Calibrate(void);
 void FIR_Learn(void);
 void FIR_Run(void);
-void FIR_Cancel(void);
+
