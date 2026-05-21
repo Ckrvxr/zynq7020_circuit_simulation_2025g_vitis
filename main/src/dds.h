@@ -20,3 +20,4 @@ void DDS_Freq_Exec(void);
 uint32_t DDS_Freq_to_FTW(uint32_t f_out, uint32_t f_clk);
 uint32_t DDS_Vpp_to_DACGain(uint32_t vpp);
 void DDS_Send_Command(uint32_t vpp, uint32_t freq);
+void DDS_Stop(void);

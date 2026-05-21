@@ -110,3 +110,7 @@ void DDS_Send_Command(uint32_t vpp, uint32_t freq) {
     cmd |= (1 << 0) | (1 << 1); // 同时将 Bit 0 和 Bit 1 置 1 触发更新
     BRAM_Write(3, cmd);
 }
+
+void DDS_Stop(void) {
+    DDS_Send_Command(0, 0);
+}

@@ -68,7 +68,7 @@ static void Key_Handler_Up(uint8_t key_id, Key_Event_Type_t event) {
 
 static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
     uint32_t step_vpp = 100, step_freq = 100;
-    if (event == KEY_EVENT_LONG_PRESS_HOLD) {
+    if(event == KEY_EVENT_LONG_PRESS_HOLD) {
         TickType_t duration = xTaskGetTickCount() - keys[key_id].press_start_tick;
         uint32_t duration_ms = (uint32_t)(duration * 1000 / configTICK_RATE_HZ);
         if (duration_ms >= FREQ_ACCEL_THRESHOLD_MS) {
@@ -115,7 +115,7 @@ static void Key_Handler_Down(uint8_t key_id, Key_Event_Type_t event) {
 static void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
     if(event == KEY_EVENT_SINGLE_CLICK) {
         if     (currentState == STATE_MAIN_MENU) {
-            if     (menu_index == 1) { currentState = STATE_DDS_MODE_MENU; menu_index = 1; slect_index = 0; }
+            if     (menu_index == 1) { currentState = STATE_DDS_MODE_MENU; menu_index = 1; slect_index = 0; DDS_Send_Command(dds_vpp, dds_freq); }
             else if(menu_index == 2) { currentState = STATE_FIR_MODE_MENU; menu_index = 1; slect_index = 0; }
         }
         else if(currentState == STATE_DDS_MODE_MENU) {
@@ -160,8 +160,11 @@ static void Key_Handler_Cancel(uint8_t key_id, Key_Event_Type_t event) {
             return;
         }
         else if(currentState == STATE_DDS_MODE_MENU) {
-            if(slect_index == 0) {
-                currentState = STATE_MAIN_MENU; menu_index = 1; slect_index = 0;
+            if     (slect_index == 0) {
+                DDS_Stop();
+                currentState = STATE_MAIN_MENU;
+                menu_index = 1;
+                slect_index = 0;
             }
             else if(slect_index == 1) {
                 DDS_Vpp_Cancel();
