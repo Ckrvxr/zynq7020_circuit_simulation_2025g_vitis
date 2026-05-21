@@ -64,8 +64,13 @@ uint32_t DDS_Freq_to_FTW(uint32_t f_out, uint32_t f_clk) {
   return ftw;
 }
 
+/**
+ * @brief 将峰峰值 (Vpp) 转换为 DAC 增益值
+ *
+ * @param vpp 峰峰值，单位为 mV (0 ~ 8000 mV)
+ * @return uint32_t 返回对应的 DAC 增益值 (0 ~ 255)
+ */
 uint32_t DDS_Vpp_to_DACGain(uint32_t vpp) {
-    // 将 0 ~ 8,000 mV 映射到 0 ~ 255 (12-bit DAC,实际只有 8-bit 有效)
     uint32_t dac_value = (vpp * 255 + 4000) / 8000;
     // if (dac_value > 4) dac_value -= 1;
     if (dac_value > 255) dac_value = 255;
@@ -85,8 +90,8 @@ void DDS_Send_Command() {
     cmd &= ~(0x0FFF << 16);             // 清空原有的 DAC_GAIN (位 27:16)
     cmd |= ((dac_gain & 0x0FFF) << 16); // 写入新的 DAC_GAIN 到对应位域
     BRAM_Write(1, cmd);                 // 写入 ADDR_GAIN (地址 1)
-    // DDS Update Trigger
+    // Inform PL Load DDS Parameters
     cmd = BRAM_Read(3);                 // 读取当前状态寄存器 (地址 3)
-    cmd |= (1 << 0) | (1 << 1);         // 同时将 Bit 0 和 Bit 1 置 1 触发更新
+    cmd |= (1 << 0) | (1 << 1); // 同时将 Bit 0 和 Bit 1 置 1 触发更新
     BRAM_Write(3, cmd);
 }
