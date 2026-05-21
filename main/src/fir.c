@@ -12,6 +12,11 @@
 volatile uint32_t sweep_vpp  = 3300;
 volatile uint32_t sweep_freq = 50000;
 
+volatile int fir_progress  = 0;
+volatile uint32_t fir_curr_freq = 0;
+volatile int16_t fir_curr_i = 0;
+volatile int16_t fir_curr_r = 0;
+
 void FIR_Learn(void) {
     xil_printf("INFO[FIR]: FIR Learning Started...\n\r");
 
@@ -50,6 +55,9 @@ void FIR_Learn(void) {
     // 扫频：50Hz ~ 60kHz，1040 个线性间隔频点
     for (int i = 0; i < 1040; i++) {
         uint32_t freq = 50 + (uint32_t)((uint64_t)i * 59950 / 1039);
+        fir_progress = i;
+        fir_curr_freq = freq;
+
         uint32_t ftw = DDS_Freq_to_FTW(freq, 50000000);
         cmd = ftw;
         BRAM_Write(0, cmd);
@@ -76,11 +84,13 @@ void FIR_Learn(void) {
         } while ((cmd & (1 << 4)) != 0);
         vTaskDelay(pdMS_TO_TICKS(10));
         ir_result = BRAM_Read(2);
+        fir_curr_i = (int16_t)((ir_result >> 16) & 0xFFFF);
+        fir_curr_r = (int16_t)(ir_result & 0xFFFF);
         xil_printf("INFO[FIR]: Freq= %u Hz, I= %d R= %d\n\r",
-                   freq,
-                   (s16)((ir_result >> 16) & 0xFFFF),
-                   (s16)(ir_result & 0xFFFF));
+                   freq, fir_curr_i, fir_curr_r);
     }
+
+    fir_progress = 1040;
     
     xil_printf("INFO[FIR]: Frequency sweep completed!\n\r");
 }

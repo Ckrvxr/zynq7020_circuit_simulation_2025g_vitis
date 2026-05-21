@@ -138,9 +138,10 @@ static void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
                 slect_index = menu_index;
             }
             else if(slect_index == 1) {
-                FIR_Learn();
                 currentState = STATE_FIR_MODE_LEARNING;
                 slect_index = 0;
+                FIR_Learn();
+                currentState = STATE_FIR_MODE_LEARN_COMPLETE;
             }
         }
         else if(currentState == STATE_FIR_MODE_LEARNING) {

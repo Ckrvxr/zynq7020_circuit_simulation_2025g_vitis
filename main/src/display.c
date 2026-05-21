@@ -12,6 +12,7 @@
 #include "u8g2.h"
 
 #include "dds.h"
+#include "fir.h"
 /* -------------------------------------------------------- Driver -------------------------------------------------------- */
 static XIicPs IicInstance;
 static u8g2_t u8g2;
@@ -184,27 +185,43 @@ static void Display_Draw_FIRMode(void) {
 }
 
 static void Display_Draw_FIRModeLearningProgress(void) {
-    uint8_t progress = (frame_count % 101); 
-    char buf[16];
+    char buf[64];
+    char fmt[32];
 
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
     u8g2_DrawStr(&u8g2, 0, 10, "[Learning...]");
     Display_Draw_LiveAnimation(120, 5);
-    
-    u8g2_DrawFrame(&u8g2, 10, 30, 108, 10);
-    u8g2_DrawBox(&u8g2, 12, 32, progress, 6);
-    
-    snprintf(buf, sizeof(buf), "Proc: %d%%", progress);
-    u8g2_DrawStr(&u8g2, 35, 55, buf);
+    u8g2_DrawHLine(&u8g2, 0, 14, 128);
+
+    u8g2_DrawFrame(&u8g2, 10, 20, 108, 8);
+    if (fir_progress > 0) {
+        uint8_t bar_w = (uint32_t)fir_progress * 104 / 1040;
+        if (bar_w > 104) bar_w = 104;
+        u8g2_DrawBox(&u8g2, 12, 22, bar_w, 4);
+    }
+
+    snprintf(buf, sizeof(buf), "%d / 1040", fir_progress);
+    u8g2_DrawStr(&u8g2, 30, 40, buf);
+
+    Format_With_Commas(fir_curr_freq, fmt);
+    snprintf(buf, sizeof(buf), "Freq: %s Hz", fmt);
+    u8g2_DrawStr(&u8g2, 10, 52, buf);
+
+    snprintf(buf, sizeof(buf), "I:%+5d  R:%+5d", fir_curr_i, fir_curr_r);
+    u8g2_DrawStr(&u8g2, 10, 63, buf);
 }
 
 static void Display_Draw_FIRModeLearnComplete(void) {
     u8g2_SetFont(&u8g2, u8g2_font_ncenB08_tr);
-    u8g2_DrawStr(&u8g2, 20, 35, "LEARN DONE!");
-    if ((frame_count / 4) % 2) {
-        u8g2_DrawFrame(&u8g2, 15, 20, 98, 25);
+    u8g2_DrawStr(&u8g2, 0, 10, "[LEARN DONE]");
+    Display_Draw_LiveAnimation(120, 5);
+    u8g2_DrawHLine(&u8g2, 0, 14, 128);
+
+    u8g2_DrawStr(&u8g2, 10, 32, "Type: Band-Stop");
+    if ((frame_count / 6) % 2) {
+        u8g2_DrawFrame(&u8g2, 15, 38, 98, 18);
     }
-    u8g2_DrawStr(&u8g2, 25, 60, "Press Back");
+    u8g2_DrawStr(&u8g2, 30, 52, "Press Back");
 }
 
 void Display_Refresh(void) {
