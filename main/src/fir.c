@@ -162,6 +162,7 @@ static void FIR_Sweep(void) {
     }
 
     fir_progress = 1040;
+    DDS_Stop();
 }
 
 static void FIR_CalcCoeffs(void) {
