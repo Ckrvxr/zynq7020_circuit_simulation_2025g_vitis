@@ -234,6 +234,8 @@
                                 <option id="xilinx.gnu.compiler.dircategory.includes.2094138842" name="Include Paths" superClass="xilinx.gnu.compiler.dircategory.includes" useByScannerDiscovery="false" valueType="includePath">
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/u8g2-master/csrc}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/kissfft-131.2.0}&quot;"/>
                                     								
                                 </option>
                                 								
@@ -278,6 +280,12 @@
                                 <option id="xilinx.gnu.c.linker.option.lscript.1622044917" name="Linker Script" superClass="xilinx.gnu.c.linker.option.lscript" value="../src/lscript.ld" valueType="string"/>
                                 								
                                 <option id="xilinx.gnu.c.link.option.ldflags.882937543" name="Linker Flags" superClass="xilinx.gnu.c.link.option.ldflags" value=" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec" valueType="string"/>
+                                								
+                                <option id="xilinx.gnu.c.link.option.libs.1264142885" superClass="xilinx.gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+                                    									
+                                    <listOptionValue builtIn="false" value="m"/>
+                                    								
+                                </option>
                                 								
                                 <inputType id="xilinx.gnu.linker.input.2105734064" superClass="xilinx.gnu.linker.input">
                                     									

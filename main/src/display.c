@@ -226,7 +226,7 @@ static void Display_Draw_FIRModeLearnComplete(void) {
     u8g2_DrawStr(&u8g2, 18, 30, buf);
 
     Display_Draw_Cursor(45, (menu_index == 2), 0);
-    u8g2_DrawStr(&u8g2, 18, 45, "2.Apply Model");
+    u8g2_DrawStr(&u8g2, 18, 45, "2.Apply Model(BUG)");
 
     Display_Draw_Cursor(60, (menu_index == 3), 0);
     u8g2_DrawStr(&u8g2, 18, 60, "3.Cancel");

@@ -152,8 +152,8 @@ static void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
                 slect_index = menu_index;
             }
             else if(slect_index == 1) {
-                FIR_Run();
-                currentState = STATE_FIR_RUNNING;
+                // FIR_Run();
+                // currentState = STATE_FIR_RUNNING;
                 slect_index = 0;
             }
             else if(slect_index == 2) {
@@ -174,7 +174,7 @@ static void Key_Handler_Confirm(uint8_t key_id, Key_Event_Type_t event) {
         }
         else if(currentState == STATE_FIR_MODE_LEARN_COMPLETE) {
             if     (menu_index == 1) { currentState = STATE_FIR_CURVE_VIEW; }
-            else if(menu_index == 2) { FIR_Run(); currentState = STATE_FIR_MODE_MENU; menu_index = 1; slect_index = 0; }
+            else if(menu_index == 2) { /* FIR_Run() disabled (bug) */ }
             else if(menu_index == 3) { currentState = STATE_FIR_MODE_MENU; menu_index = 1; slect_index = 0; }
         }
     }
