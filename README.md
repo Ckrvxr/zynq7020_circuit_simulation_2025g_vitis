@@ -1,4 +1,4 @@
-# 2025G Circuit Simulation (Vitis)
+# zynq7020_circuit_simulation_2025g_vitis
 
 Zynq-7020 平台电路仿真系统，基于 Xilinx Vitis 2023.1 开发。
 
