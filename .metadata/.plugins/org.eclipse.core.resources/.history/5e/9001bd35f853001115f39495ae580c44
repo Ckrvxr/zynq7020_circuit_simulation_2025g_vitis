@@ -1,0 +1,63 @@
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include "xparameters.h"
+#include "xil_printf.h"
+#include "xil_types.h"
+
+#include "display.h"
+#include "key.h"
+#include "bram.h"
+
+TaskHandle_t xDisplayTaskHandle;
+TaskHandle_t xTaskKeyPollingHandle;
+TaskHandle_t xMainTaskHandle;
+
+static void vDisplayTask(void *pvParameters) {
+    Display_Init();
+
+    for( ;; ) {
+        Display_Refresh();
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
+}
+
+void vTaskKeyPolling(void *pvParameters) {
+    Key_Init();
+    Key_Task(NULL);
+}
+
+static volatile uint32_t data = 0xF0000000;
+static volatile uint32_t addr_w  = 0x00000002;
+static volatile uint32_t addr_r  = 0x00000002;
+static volatile uint32_t tmp;
+
+void vMainTask(void *pvParameters) {
+  BRAM_Write(0, 0xF0000000);
+  BRAM_Write(1, 0xF0000000);
+  BRAM_Write(2, 0xF0000000);
+  BRAM_Write(3, 0xF0000000);
+  while (1) {
+        BRAM_Write(addr_w, data);
+        vTaskDelay(pdMS_TO_TICKS(10));
+        tmp = BRAM_Read(addr_r);
+
+  }
+}
+
+int main( void )
+{
+    BRAM_Init();
+
+    xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
+    xTaskCreate(vTaskKeyPolling, "Key", 2048, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
+    xTaskCreate(vMainTask, "Main", 2048, NULL, tskIDLE_PRIORITY + 1, &xMainTaskHandle);
+
+    xil_printf("System Starting...\r\n");
+    
+    vTaskStartScheduler();
+
+
+
+    for( ;; );
+}

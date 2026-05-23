@@ -1,0 +1,20 @@
+# Build intermediates
+*.o
+*.d
+*.a
+
+# Temp / logs
+RemoteSystemsTempFiles/
+IDE.log
+.analytics
+*.build.ui.log
+writebif.log
+
+# Generated temp directories
+tempdsa/
+.log/
+logs/
+
+# OS
+Thumbs.db
+.DS_Store

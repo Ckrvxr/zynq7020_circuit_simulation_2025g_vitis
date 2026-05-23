@@ -1,0 +1,9 @@
+BasedOnStyle: Microsoft
+IndentWidth: 4
+ColumnLimit: 128
+BreakBeforeBraces: Attach
+UseTab: Never
+AlignAfterOpenBracket: Align
+AlignConsecutiveMacros: true
+AlignConsecutiveAssignments:
+  Enabled: true

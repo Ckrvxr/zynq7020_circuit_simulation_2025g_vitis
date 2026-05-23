@@ -1,0 +1,48 @@
+#include "FreeRTOS.h"
+#include "task.h"
+#include "xil_printf.h"
+#include "xparameters.h"
+#include "xgpiops.h"
+
+#include "display.h"
+
+/* ------------------------- 全局实例定义 ------------------------ */
+XGpioPs GpioInstance;   /* GPIO 实例 */
+
+/* 任务句柄定义 */
+static TaskHandle_t xStartingTaskHndl;
+
+/* 任务函数声明 */
+static void vStartingTask( void *pvParameters );
+
+int main( void )
+{
+    /* 注意：硬件基础初始化也可以放在这里，或者放在第一个启动任务中 */
+    xil_printf( "--- FreeRTOS 系统启动中 ---\r\n" );
+
+    /* 创建心跳任务 */
+    xTaskCreate(
+        vStartingTask,
+        "Start",
+        configMINIMAL_STACK_SIZE,
+        NULL,
+        tskIDLE_PRIORITY + 1,
+        &xStartingTaskHndl
+    );
+
+    /* 启动调度器 */
+    vTaskStartScheduler();
+
+    for( ;; );
+}
+
+static void vStartingTask( void *pvParameters )
+{
+    const TickType_t xDelayTime = pdMS_TO_TICKS( 1000UL );
+
+    for( ;; )
+    {
+        xil_printf( "系统运行状态：正常\r\n" );
+        vTaskDelay( xDelayTime );
+    }
+}

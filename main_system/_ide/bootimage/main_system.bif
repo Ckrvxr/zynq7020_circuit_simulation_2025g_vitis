@@ -1,0 +1,8 @@
+//arch = zynq; split = false; format = BIN
+the_ROM_image:
+{
+	[bootloader]C:/Users/Ckrvxr/Desktop/circuit_simulation/vitis/All_desing_wrapper/export/All_desing_wrapper/sw/All_desing_wrapper/boot/fsbl.elf
+	C:/Users/Ckrvxr/Desktop/circuit_simulation/vitis/main/_ide/bitstream/All_desing_wrapper.bit
+	C:\Users\Ckrvxr\Desktop\circuit_simulation\vitis\core0\Release\core0.elf
+	C:\Users\Ckrvxr\Desktop\circuit_simulation\vitis\main\Debug\main.elf
+}

@@ -1,0 +1,13 @@
+#pragma once
+
+#include "u8g2.h"
+#include "xil_types.h"
+
+extern u8g2_t u8g2;
+
+// 初始化函数
+void Display_Init(void);
+// 刷新函数示例
+void Display_TestPage(void);
+
+#endif

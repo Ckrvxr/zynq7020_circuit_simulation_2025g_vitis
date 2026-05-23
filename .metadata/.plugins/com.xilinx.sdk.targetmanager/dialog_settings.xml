@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item key="devices_info_Local" value="{&quot;cables&quot;:[{&quot;name&quot;:&quot;Digilent JTAG-HS3 210299453697&quot;,&quot;indexContextMap&quot;:{&quot;2&quot;:&quot;jsn-JTAG-HS3-210299453697-4ba00477-0&quot;,&quot;3&quot;:&quot;jsn-JTAG-HS3-210299453697-23727093-0&quot;}}]}"/>
+	<item key="main_system-bitFile" value="${project_loc:main}/_ide/bitstream/All_desing_wrapper.bit"/>
+	<item key="main_system-bmmFile" value=""/>
+	<item key="main_system-target" value="Local"/>
+	<item key="main_system-device" value="Auto Detect"/>
+	<item key="main_system-partial_bit" value="false"/>
+	<item key="main_system-skip_rev_check" value="false"/>
+	<item key="programfpga.sdxproject" value="main_system"/>
+</section>

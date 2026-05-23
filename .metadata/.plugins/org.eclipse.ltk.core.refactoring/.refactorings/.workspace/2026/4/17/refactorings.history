@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;main/src/CMSIS-DSP-main&apos;" deleteContents="false" description="Delete resource &apos;main/src/CMSIS-DSP-main&apos;" element1="/main/src/CMSIS-DSP-main" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1776940856616"/>&#x0A;<refactoring comment="Delete resource &apos;main/src/CMSIS_6-main&apos;" deleteContents="false" description="Delete resource &apos;main/src/CMSIS_6-main&apos;" element1="/main/src/CMSIS_6-main" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1776940861160"/>
+</session>

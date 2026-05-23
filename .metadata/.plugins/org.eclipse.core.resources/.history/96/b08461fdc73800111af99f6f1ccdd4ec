@@ -1,0 +1,110 @@
+#include "FreeRTOS.h"
+#include "task.h"
+#include "xil_printf.h"
+#include "xparameters.h"
+
+#include "display.h"
+#include "key.h"
+
+/* ========================= 全局状态变量 主逻辑唯一拥有 ========================= */
+UI_Page_t           g_current_page = PAGE_MAIN_MENU;
+uint8_t             g_menu_cursor = 0;
+SignalConfig_t      g_sig_cfg = {3.3f, 10000, WAVE_SINE, 0};
+FilterEntry_t       g_filter_bank[16];
+uint16_t            g_learn_progress = 0;
+uint32_t            g_learn_I = 0, g_learn_R = 0;
+uint8_t             g_learned_index = 0;
+
+/* 任务句柄 */
+static TaskHandle_t xDisplayTaskHandle = NULL;
+static TaskHandle_t xKeyTaskHandle = NULL;
+
+/* ==============================================================================
+                               按键事件回调 - 唯一逻辑处
+   ============================================================================== */
+void OnKeyPress(uint8_t key) {
+    switch(g_current_page) {
+        case PAGE_MAIN_MENU:
+            if(key == 0 && g_menu_cursor > 0) g_menu_cursor--;
+            if(key == 1 && g_menu_cursor < 2) g_menu_cursor++;
+            if(key == 2) {
+                if(g_menu_cursor == 0) g_current_page = PAGE_SIGNAL_GEN;
+                if(g_menu_cursor == 1) g_current_page = PAGE_FILTER_MENU;
+                g_menu_cursor = 0;
+            }
+            break;
+            
+        case PAGE_SIGNAL_GEN:
+            if(key == 3) { g_current_page = PAGE_MAIN_MENU; g_menu_cursor = 0; break; }
+            if(key == 2) { if(++g_sig_cfg.edit_pos > 2) g_sig_cfg.edit_pos = 0; break; }
+            if(key == 0) {
+                if(g_sig_cfg.edit_pos == 0) g_sig_cfg.waveform = (g_sig_cfg.waveform + 3) % 4;
+                if(g_sig_cfg.edit_pos == 1 && g_sig_cfg.vpp > 0.0f) g_sig_cfg.vpp -= 0.1f;
+                if(g_sig_cfg.edit_pos == 2 && g_sig_cfg.freq > 100) g_sig_cfg.freq -= 100;
+            }
+            if(key == 1) {
+                if(g_sig_cfg.edit_pos == 0) g_sig_cfg.waveform = (g_sig_cfg.waveform + 1) % 4;
+                if(g_sig_cfg.edit_pos == 1 && g_sig_cfg.vpp < 5.0f) g_sig_cfg.vpp += 0.1f;
+                if(g_sig_cfg.edit_pos == 2 && g_sig_cfg.freq < 1000000) g_sig_cfg.freq += 100;
+            }
+            break;
+            
+        case PAGE_FILTER_MENU:
+            if(key == 3) { g_current_page = PAGE_MAIN_MENU; g_menu_cursor = 0; break; }
+            if(key == 0 && g_menu_cursor > 0) g_menu_cursor--;
+            if(key == 1 && g_menu_cursor < 5) g_menu_cursor++;
+            if(key == 2 && g_menu_cursor == 0) {
+                g_current_page = PAGE_LEARNING;
+                g_learn_progress = 0;
+            }
+            break;
+            
+        case PAGE_LEARN_COMPLETE:
+            if(key == 2 || key == 3) g_current_page = PAGE_FILTER_MENU;
+            break;
+            
+        default: break;
+    }
+}
+
+/* ==============================================================================
+                                     显示任务
+   ============================================================================== */
+static void vDisplayTask(void *pvParameters) {
+    Display_Init();
+    memset(g_filter_bank, 0, sizeof(g_filter_bank));
+    
+    xil_printf("Display Initialized OK\r\n");
+
+    while(1) {
+        u8g2_ClearBuffer(&u8g2);
+        
+        switch(g_current_page) {
+            case PAGE_MAIN_MENU:      Draw_MainMenu(g_menu_cursor); break;
+            case PAGE_SIGNAL_GEN:     Draw_SignalGen(g_sig_cfg); break;
+            case PAGE_FILTER_MENU:    Draw_FilterMenu(g_menu_cursor, 4, g_filter_bank); break;
+            case PAGE_LEARNING:       Draw_Learning(g_learn_progress, g_learn_I, g_learn_R); break;
+            case PAGE_LEARN_COMPLETE: Draw_LearnComplete(g_filter_bank[g_learned_index], g_learned_index); break;
+        }
+        
+        u8g2_SendBuffer(&u8g2);
+        vTaskDelay(pdMS_TO_TICKS(30));
+    }
+}
+
+/* ==============================================================================
+                                      主函数
+   ============================================================================== */
+int main( void )
+{
+    xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
+    xTaskCreate(Key_Task, "Key", 1024, NULL, tskIDLE_PRIORITY + 3, &xKeyTaskHandle);
+
+    Key_Init(OnKeyPress);
+    
+    xil_printf("System Starting...\r\n");
+    
+    vTaskStartScheduler();
+
+    for( ;; );
+}

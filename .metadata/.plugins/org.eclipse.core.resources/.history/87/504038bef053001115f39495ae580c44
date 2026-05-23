@@ -1,0 +1,64 @@
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include "xparameters.h"
+#include "xil_printf.h"
+#include "xil_types.h"
+
+#include "display.h"
+#include "key.h"
+#include "bram.h"
+
+TaskHandle_t xDisplayTaskHandle;
+TaskHandle_t xTaskKeyPollingHandle;
+TaskHandle_t xMainTaskHandle;
+
+static void vDisplayTask(void *pvParameters) {
+    Display_Init();
+
+    for( ;; ) {
+        Display_Refresh();
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
+}
+
+void vTaskKeyPolling(void *pvParameters) {
+    Key_Init();
+    Key_Task(NULL);
+}
+
+void vMainTask(void *pvParameters) {
+  BRAM_Write(0, 0xF0000000);
+  BRAM_Write(1, 0xF0000000);
+  BRAM_Write(2, 0xF0000000);
+  BRAM_Write(3, 0xF0000000);
+  while (1) {
+	    uint32_t tmp;
+    tmp = BRAM_Read(0);
+//    xil_printf("[BRAM] BRAM Read: addr=0x%08X -> data=0x%08X\r\n", 0, tmp);
+    tmp = BRAM_Read(1);
+//    xil_printf("[BRAM] BRAM Read: addr=0x%08X -> data=0x%08X\r\n", 1, tmp);
+    tmp = BRAM_Read(2);
+//    xil_printf("[BRAM] BRAM Read: addr=0x%08X -> data=0x%08X\r\n", 2, tmp);
+    tmp = BRAM_Read(3);
+//    xil_printf("[BRAM] BRAM Read: addr=0x%08X -> data=0x%08X\r\n", 3, tmp);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+  }
+}
+
+int main( void )
+{
+    BRAM_Init();
+
+    xTaskCreate(vDisplayTask, "Display", 2048, NULL, tskIDLE_PRIORITY + 2, &xDisplayTaskHandle);
+    xTaskCreate(vTaskKeyPolling, "Key", 2048, NULL, tskIDLE_PRIORITY + 2, &xTaskKeyPollingHandle);
+    xTaskCreate(vMainTask, "Main", 2048, NULL, tskIDLE_PRIORITY + 1, &xMainTaskHandle);
+
+    xil_printf("System Starting...\r\n");
+    
+    vTaskStartScheduler();
+
+
+
+    for( ;; );
+}

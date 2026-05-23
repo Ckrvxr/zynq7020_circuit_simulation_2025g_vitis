@@ -1,0 +1,14 @@
+16:09:14 **** Incremental Build of configuration Debug for project bsp_system ****
+make all 
+Generating bif file for the system project
+generate_system_bif.bat 54288 C:/Users/Ckrvxr/Desktop/circuit_simulation/vitis/All_desing_wrapper/export/All_desing_wrapper/All_desing_wrapper.xpfm standalone_ps7_cortexa9_0 C:/Users/Ckrvxr/Desktop/circuit_simulation/vitis/bsp_system/Debug/system.bif
+ECHO is off.
+ECHO is off.
+sdcard_gen --xpfm C:/Users/Ckrvxr/Desktop/circuit_simulation/vitis/All_desing_wrapper/export/All_desing_wrapper/All_desing_wrapper.xpfm --sys_config All_desing_wrapper --bif C:/Users/Ckrvxr/Desktop/circuit_simulation/vitis/bsp_system/Debug/system.bif --bitstream C:/Users/Ckrvxr/Desktop/circuit_simulation/vitis/bsp/_ide/bitstream/All_desing_wrapper.bit --elf C:/Users/Ckrvxr/Desktop/circuit_simulation/vitis/bsp/Debug/bsp.elf,ps7_cortexa9_0
+ECHO is off.
+ECHO is off.
+ELF does not exist: C:/Users/Ckrvxr/Desktop/circuit_simulation/vitis/bsp/Debug/bsp.elf
+make: *** [makefile:37: package] Error 1
+
+16:09:16 Build Finished (took 2s.190ms)
+

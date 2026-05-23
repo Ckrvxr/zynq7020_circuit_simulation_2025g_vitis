@@ -1,0 +1,44 @@
+#pragma once
+
+#include "u8g2.h"
+#include "xil_types.h"
+
+/* ================================ 菜单系统定义 ================================ */
+typedef enum {
+    PAGE_MAIN_MENU      = 0,    // 界面1: 主菜单
+    PAGE_SIGNAL_GEN     = 1,    // 界面2: 信号发生器
+    PAGE_FILTER_MENU    = 2,    // 界面3: 滤波器菜单
+    PAGE_LEARNING       = 3,    // 界面4: 学习中
+    PAGE_LEARN_COMPLETE = 4     // 界面5: 学习完成
+} UI_Page_t;
+
+typedef enum {
+    WAVE_SINE   = 0,
+    WAVE_SQUARE = 1,
+    WAVE_TRIANGLE = 2,
+    WAVE_SAW    = 3
+} WaveformType_t;
+
+typedef struct {
+    float       vpp;        // 峰峰值 0.0~5.0V
+    uint32_t    freq;       // 频率 Hz
+    uint8_t     waveform;   // 波形类型
+    uint8_t     edit_pos;   // 当前编辑位置
+} SignalConfig_t;
+
+typedef struct {
+    uint8_t     valid;
+    uint8_t     type;       // 0:高通 1:低通 2:带通 3:带阻
+    uint16_t    params[8];
+    char        name[16];
+} FilterEntry_t;
+
+extern u8g2_t u8g2;
+extern UI_Page_t g_current_page;
+extern SignalConfig_t g_sig_cfg;
+extern FilterEntry_t g_filter_bank[16];
+extern uint8_t g_menu_cursor;
+extern uint16_t g_learn_progress;
+extern uint32_t g_learn_I, g_learn_R;
+extern uint8_t g_learned_index;
+

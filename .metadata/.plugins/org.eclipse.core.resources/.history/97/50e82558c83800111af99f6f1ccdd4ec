@@ -1,0 +1,22 @@
+#pragma once
+
+#include "xil_types.h"
+#include "xparameters.h"
+
+/* ================================ PL DSP 寄存器映射 ================================ */
+#define DSP_CTRL_BASE          XPAR_DSP_CTRL_BASE // 需对应 Vivado 地址
+
+// 1. 扫频控制 (IRR Engine)
+#define REG_IRR_START          0x00    // 写 1 启动 PL 自动扫频
+#define REG_IRR_STATUS         0x04    // Bit 0: Busy, Bit 1: Done
+#define REG_IRR_PROGRESS       0x08    // 读取 PL 当前扫频进度 (0-128)
+
+// 2. 结果读取 (Filter Composer 输出)
+#define REG_COMPOSER_TYPE      0x10    // PL 识别出的滤波器类型 (0:HP, 1:LP...)
+#define REG_COMPOSER_PARAM_RD  0x14    // 用于读取计算出的系数或特征值
+#define REG_ADC_PEAK_VAL       0x18    // 当前扫频点的幅值 (用于显示 I 值)
+#define REG_CURRENT_FREQ       0x1C    // 当前扫频点的频率 (用于显示 R 值)
+
+/* ================================ 函数接口 ================================ */
+void IRR_Control_Task(void *pvParameters);
+void IRR_Trigger_Sweep(void);
